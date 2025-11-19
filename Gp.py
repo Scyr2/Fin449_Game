@@ -92,6 +92,11 @@ def draw_settings_panel(win_w, win_h):
     btn_vol_down.draw()
     btn_vol_mute.draw()
 
+# Weapon selection and difficulty selection screen
+def draw_selections():
+    draw_background_cover(images.selections_background)
+
+
 # Game screen
 def draw_game():
     draw_background_cover(images.game_background)
@@ -100,6 +105,8 @@ def draw_game():
 def draw():
     if current_screen == "Menu":
         draw_menu()
+    if current_screen == "Selections":
+        draw_selections()
     elif current_screen == "Game":
         draw_game()
 
@@ -110,7 +117,7 @@ def on_mouse_down(pos):
     if current_screen == "Menu":
 
         if btn_play.collidepoint(pos):
-            current_screen = "Game"
+            current_screen = "Selections"
 
         elif btn_info.collidepoint(pos):
             print("Instructions")
