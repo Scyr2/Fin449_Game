@@ -164,4 +164,11 @@ def on_mouse_down(pos):
                 muted = not muted
                 print("Muted:", muted)
 
+#Selections click handling
+    if current_screen == "Selections":
+        if btn_parrot.collidepoint(pos):
+            current_screen = "Game"
+#Game Loop
+
+
 pgzrun.go()
