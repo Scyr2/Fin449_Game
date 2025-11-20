@@ -20,6 +20,15 @@ btn_vol_up = Actor("btn_volume_up")
 btn_vol_down = Actor("btn_volume_down")
 btn_vol_mute = Actor("btn_volume_mute")
 
+# Selection Screen Actors
+btn_parrot = Actor("btn_parrot")
+btn_cannon = Actor("btn_cannon")
+btn_blunderbuss = Actor("btn_blunderbuss")
+btn_easy = Actor("btn_easy")
+btn_medium = Actor("btn_medium")
+btn_hard = Actor("btn_hard")
+#Need to add some sort of plunder system for turns here too later.
+
 # Resize helper
 def resize_actor(actor, width, height):
     scaled = pygame.transform.smoothscale(actor._surf, (width, height))
@@ -40,6 +49,15 @@ def layout_menu():
     btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 70)
     btn_vol_mute.pos = (btn_vol_up.x, btn_vol_up.y + 140)
 
+#Selection Screen buttons
+def selections_menu():
+    btn_parrot.pos = (700,75)
+    btn_cannon.pos = (700,175)
+    btn_blunderbuss.pos = (700,275)
+    btn_easy.pos = (700,375)
+    btn_medium.pos = (700,475)
+    btn_hard.pos = (700,550)
+
 # Draw background image to cover screen
 def draw_background_cover(image):
     win_w, win_h = screen.surface.get_size()
@@ -56,10 +74,9 @@ def draw_background_cover(image):
 
     screen.blit(scaled, (x, y))
 
-# Menu draw
+# Main Menu draw
 def draw_menu():
     draw_background_cover(images.welcome_background)
-
     layout_menu()
     btn_play.draw()
     btn_info.draw()
@@ -95,6 +112,14 @@ def draw_settings_panel(win_w, win_h):
 # Weapon selection and difficulty selection screen
 def draw_selections():
     draw_background_cover(images.selections_background)
+    selections_menu()
+    btn_parrot.draw()
+    btn_cannon.draw()
+    btn_blunderbuss.draw()
+    btn_easy.draw()
+    btn_medium.draw()
+    btn_hard.draw()
+
 
 
 # Game screen
