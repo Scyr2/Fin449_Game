@@ -15,7 +15,6 @@ selected_weapon = None
 
 # Button Actors
 btn_play = Actor("btn_play")
-btn_info = Actor("btn_info")
 btn_settings = Actor("btn_settings")
 btn_vol_up = Actor("btn_volume_up")
 btn_vol_down = Actor("btn_volume_down")
