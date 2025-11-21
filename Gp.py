@@ -20,6 +20,7 @@ btn_settings = Actor("btn_settings")
 btn_vol_up = Actor("btn_volume_up")
 btn_vol_down = Actor("btn_volume_down")
 btn_vol_mute = Actor("btn_volume_mute")
+btn_instructions = Actor("btn_instructions")
 
 # Selection Screen Actors
 btn_parrot = Actor("btn_parrot")
@@ -49,8 +50,8 @@ def resize_actor(actor, width, height):
 def layout_menu():
     win_w, win_h = screen.surface.get_size()
     btn_play.pos = (400,300)
-    btn_info.pos = (win_w - 100, win_h -500)
-    btn_settings.pos = (win_w - 100, win_h -450)
+    btn_instructions.pos = (win_w - 100, win_h -500)
+    btn_settings.pos = (win_w - 100, win_h -350)
 
     btn_vol_up.pos = (int(win_w * 0.75), int(win_h * 0.45))
     btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 70)
@@ -91,7 +92,7 @@ def draw_menu():
     draw_background_cover(images.welcome_background)
     layout_menu()
     btn_play.draw()
-    btn_info.draw()
+    btn_instructions.draw()
     btn_settings.draw()
 
     if settings_open:
@@ -164,7 +165,7 @@ def on_mouse_down(pos):
         if btn_play.collidepoint(pos):
             current_screen = "Selections"
 
-        elif btn_info.collidepoint(pos):
+        elif btn_instructions.collidepoint(pos):
             print("Instructions")
 
         elif btn_settings.collidepoint(pos):
