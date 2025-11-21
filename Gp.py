@@ -11,6 +11,7 @@ current_screen = "Menu"
 settings_open = False
 volume = 0.5
 muted = False
+selected_weapon = None
 
 # Button Actors
 btn_play = Actor("btn_play")
@@ -28,6 +29,9 @@ btn_easy = Actor("btn_easy")
 btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
 #Need to add some sort of plunder system for turns here too later.
+
+#In-Game Actors
+player_ship = Actor("player_ship")
 
 # Resize helper
 def resize_actor(actor, width, height):
@@ -57,6 +61,13 @@ def selections_menu():
     btn_easy.pos = (700,375)
     btn_medium.pos = (700,475)
     btn_hard.pos = (700,550)
+
+#In Game Buttons and Actors
+def game_menu():
+    player_ship.pos = (700,400)
+    btn_parrot.pos = (450,100)
+    btn_cannon.pos = (650,520)
+    btn_blunderbuss.pos = (650,520)
 
 # Draw background image to cover screen
 def draw_background_cover(image):
@@ -125,6 +136,14 @@ def draw_selections():
 # Game screen
 def draw_game():
     draw_background_cover(images.game_background)
+    game_menu()
+    player_ship.draw()
+    if selected_weapon == "parrot":
+        btn_parrot.draw()
+    if selected_weapon == "cannon":
+        btn_cannon.draw()
+    if selected_weapon == "blunderbuss":
+        btn_blunderbuss.draw()
 
 # Main draw
 def draw():
@@ -137,7 +156,7 @@ def draw():
 
 # Click handling
 def on_mouse_down(pos):
-    global current_screen, settings_open, volume, muted
+    global current_screen, settings_open, volume, muted, selected_weapon
 
     if current_screen == "Menu":
 
@@ -164,10 +183,24 @@ def on_mouse_down(pos):
                 muted = not muted
                 print("Muted:", muted)
 
+
 #Selections click handling
     if current_screen == "Selections":
         if btn_parrot.collidepoint(pos):
             current_screen = "Game"
+
+        if btn_parrot.collidepoint(pos):
+            selected_weapon = "parrot"
+            current_screen = "Game"
+
+        elif btn_cannon.collidepoint(pos):
+            selected_weapon = "cannon"
+            current_screen = "Game"
+
+        elif btn_blunderbuss.collidepoint(pos):
+            selected_weapon = "blunderbuss"
+            current_screen = "Game"
+
 #Game Loop
 
 
