@@ -32,6 +32,9 @@ btn_hard = Actor("btn_hard")
 
 #In-Game Actors
 player_ship = Actor("player_ship")
+weapon_parrot = Actor("weapon_parrot")
+weapon_cannon = Actor("weapon_cannon")
+weapon_blunderbuss = Actor("weapon_blunderbuss")
 
 # Resize helper
 def resize_actor(actor, width, height):
@@ -65,9 +68,7 @@ def selections_menu():
 #In Game Buttons and Actors
 def game_menu():
     player_ship.pos = (700,400)
-    btn_parrot.pos = (450,100)
-    btn_cannon.pos = (650,520)
-    btn_blunderbuss.pos = (650,520)
+
 
 # Draw background image to cover screen
 def draw_background_cover(image):
@@ -139,11 +140,11 @@ def draw_game():
     game_menu()
     player_ship.draw()
     if selected_weapon == "parrot":
-        btn_parrot.draw()
+        weapon_parrot.draw()
     if selected_weapon == "cannon":
-        btn_cannon.draw()
+        weapon_cannon.draw()
     if selected_weapon == "blunderbuss":
-        btn_blunderbuss.draw()
+        weapon_blunderbuss.draw()
 
 # Main draw
 def draw():
@@ -186,22 +187,37 @@ def on_mouse_down(pos):
 
 #Selections click handling
     if current_screen == "Selections":
-        if btn_parrot.collidepoint(pos):
-            current_screen = "Game"
 
         if btn_parrot.collidepoint(pos):
             selected_weapon = "parrot"
             current_screen = "Game"
-
+            weapon_parrot.pos = (450, 100)
         elif btn_cannon.collidepoint(pos):
             selected_weapon = "cannon"
             current_screen = "Game"
-
+            weapon_cannon.pos = (650, 520)
         elif btn_blunderbuss.collidepoint(pos):
             selected_weapon = "blunderbuss"
             current_screen = "Game"
-
+            weapon_blunderbuss.pos = (650, 520)
 #Game Loop
+
+#Parrot Movement
+def update():
+    if current_screen == 'Game' and selected_weapon == 'parrot':
+        #Move left
+        if keyboard.left:
+            weapon_parrot.x -= 7
+
+        #Move right
+        if keyboard.right:
+            weapon_parrot.x += 7
+
+        #Keep the parrot on screen
+        if weapon_parrot.left < 0:
+            weapon_parrot.left = 0
+        if weapon_parrot.right > WIDTH:
+            weapon_parrot.right = WIDTH
 
 
 pgzrun.go()
