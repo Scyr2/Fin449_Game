@@ -1,5 +1,6 @@
 import pygame
 import pgzrun
+import math
 
 # Base sizes
 base_width = 800
@@ -30,44 +31,86 @@ btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
 #Need to add some sort of plunder system for turns here too later.
 
-#In-Game Actors
+#mIn-Game Actors
 player_ship = Actor("player_ship")
 weapon_parrot = Actor("weapon_parrot")
 weapon_cannon = Actor("weapon_cannon")
 weapon_blunderbuss = Actor("weapon_blunderbuss")
 
-# Resize helper
-def resize_actor(actor, width, height):
-    scaled = pygame.transform.smoothscale(actor._surf, (width, height))
-    actor._surf = scaled
-    actor.width = width
-    actor.height = height
+# Settings for the Cannon Game
+angle_deg = 0 # Cannon actual angle (degrees)
+deg_to_show = 25 # Cannon base angle (degrees)
+line_length = 150 # Length of the aiming line
+power = 0
 
+
+# Creating the arc line for the Cannon's aim
+def draw_arc_from_cannon():
+    g = 9.81
+    t = 0
+    v = power
+    deg_to_show_rad = math.radians(deg_to_show)
+
+    start_x = weapon_cannon.x - line_length / 3.1 * math.cos(deg_to_show_rad)
+    start_y = weapon_cannon.y - line_length / 3.1 * math.sin(deg_to_show_rad)
+
+    positions = []
+
+    while True:
+        x = v * math.cos(deg_to_show_rad) * t # # Using the physics equation y(t) = v * cos(θ) * t to find the x value of the point
+        y = v * math.sin(deg_to_show_rad) * t - 0.5 * g * t**2 # Using the physics equation y(t) = v * sin(θ) * t -0.5 * g * t^2 to find the y value of the point
+
+        screen_x = start_x - x # This will give us the distance from the current point to the next on x-axis
+        screen_y = start_y - y # This will give us the distance from the current point to the next on y-axis
+
+        if (screen_x < 0 or screen_y > HEIGHT):
+            break
+
+        positions.append((screen_x, screen_y))
+        t += 0.2 # Time step, which is also the accurancy of the line
+
+    for i in range(len(positions) - 1):
+        screen.draw.line(positions[i], positions[i + 1], "yellow")
+
+
+# Cannon Game
+def cannon_game():
+    weapon_cannon.draw()
+    draw_arc_from_cannon()
+
+    weapon_cannon.angle = -angle_deg
+
+    screen.draw.text(
+        f"{deg_to_show}°\nPower: {power}",
+        (weapon_cannon.x - 120, weapon_cannon.y + 10),
+        fontsize = 25,
+        color = "white"
+    )
 
 
 # Layout buttons
 def layout_menu():
     win_w, win_h = screen.surface.get_size()
-    btn_play.pos = (400,300)
-    btn_instructions.pos = (win_w - 100, win_h -500)
-    btn_settings.pos = (win_w - 100, win_h -350)
+    btn_play.pos = (300, 500)
+    btn_instructions.pos = (500, 500)
+    btn_settings.pos = (win_w - 50, win_h - 50)
 
     btn_vol_up.pos = (int(win_w * 0.75), int(win_h * 0.45))
     btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 70)
     btn_vol_mute.pos = (btn_vol_up.x, btn_vol_up.y + 140)
 
-#Selection Screen buttons
+# Selection Screen buttons
 def selections_menu():
-    btn_parrot.pos = (700,75)
-    btn_cannon.pos = (700,175)
-    btn_blunderbuss.pos = (700,275)
-    btn_easy.pos = (700,375)
-    btn_medium.pos = (700,475)
-    btn_hard.pos = (700,550)
+    btn_parrot.pos = (500, 175)
+    btn_cannon.pos = (500, 325)
+    btn_blunderbuss.pos = (500, 450)
+    btn_easy.pos = (300, 175)
+    btn_medium.pos = (300, 325)
+    btn_hard.pos = (300, 450)
 
-#In Game Buttons and Actors
+# In Game Buttons and Actors
 def game_menu():
-    player_ship.pos = (700,400)
+    player_ship.pos = (700, 400)
 
 
 # Draw background image to cover screen
@@ -133,7 +176,6 @@ def draw_selections():
     btn_hard.draw()
 
 
-
 # Game screen
 def draw_game():
     draw_background_cover(images.game_background)
@@ -142,7 +184,7 @@ def draw_game():
     if selected_weapon == "parrot":
         weapon_parrot.draw()
     if selected_weapon == "cannon":
-        weapon_cannon.draw()
+        cannon_game()        
     if selected_weapon == "blunderbuss":
         weapon_blunderbuss.draw()
 
@@ -185,7 +227,7 @@ def on_mouse_down(pos):
                 print("Muted:", muted)
 
 
-#Selections click handling
+# Selections click handling
     if current_screen == "Selections":
 
         if btn_parrot.collidepoint(pos):
@@ -195,29 +237,49 @@ def on_mouse_down(pos):
         elif btn_cannon.collidepoint(pos):
             selected_weapon = "cannon"
             current_screen = "Game"
-            weapon_cannon.pos = (650, 520)
+            weapon_cannon.pos = (650, 540)
         elif btn_blunderbuss.collidepoint(pos):
             selected_weapon = "blunderbuss"
             current_screen = "Game"
             weapon_blunderbuss.pos = (650, 520)
-#Game Loop
+# Game Loop
 
-#Parrot Movement
+# Parrot Movement
 def update():
     if current_screen == 'Game' and selected_weapon == 'parrot':
-        #Move left
+        # Move left
         if keyboard.left:
             weapon_parrot.x -= 7
 
-        #Move right
+        # Move right
         if keyboard.right:
             weapon_parrot.x += 7
 
-        #Keep the parrot on screen
+        # Keep the parrot on screen
         if weapon_parrot.left < 0:
             weapon_parrot.left = 0
         if weapon_parrot.right > WIDTH:
             weapon_parrot.right = WIDTH
+
+    global angle_deg, deg_to_show, power
+
+    if (keyboard.left):
+        angle_deg -= 1
+        deg_to_show -= 1
+    
+    if (keyboard.right):
+        angle_deg += 1
+        deg_to_show += 1
+
+    if (keyboard.up):
+        power += 1
+
+    if (keyboard.down):
+        power -= 1
+
+    angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
+    deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
+    power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
 
 
 pgzrun.go()
