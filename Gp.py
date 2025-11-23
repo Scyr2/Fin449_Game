@@ -128,12 +128,12 @@ def selections_menu():
     btn_easy.pos = (300, 175)
     btn_medium.pos = (300, 325)
     btn_hard.pos = (300, 450)
-    btn_back.pos = (40, 20)
+    btn_back.pos = (20, 20)
 
 # In Game Buttons and Actors
 def game_menu():
     player_ship.pos = (700, 400)
-    btn_back.pos = (40, 20)
+    btn_back.pos = (20, 20)
 
 
 # Draw background image to cover screen
@@ -339,7 +339,7 @@ def update():
 
         # Shooting Controls - Spacebar to shoot
         g = 9.81
-        t = 0.15 # Time per frame in seconds
+        t = 0.17 # Time per frame in seconds
         v = power
         deg_to_show_rad = math.radians(deg_to_show)
 
