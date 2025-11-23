@@ -31,20 +31,22 @@ btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
 #Need to add some sort of plunder system for turns here too later.
 
-#mIn-Game Actors
+# In-Game Actors
 player_ship = Actor("player_ship")
 weapon_parrot = Actor("weapon_parrot")
 weapon_cannon = Actor("weapon_cannon")
 weapon_blunderbuss = Actor("weapon_blunderbuss")
+cannon_bullet = Actor("weapon_cannon_bullet")
+cannon_bullets = [] # We need a list to track the active shots
+cannon_shoot = True # This tracks the state of the Spacebar when shooting
 
 # Settings for the Cannon Game
 angle_deg = 0 # Cannon actual angle (degrees)
 deg_to_show = 25 # Cannon base angle (degrees)
 line_length = 150 # Length of the aiming line
 power = 0
-# Offset from cannon center to barrel tip (adjust to match your image)
-barrel_offset_x = 44
-barrel_offset_y = 14
+cannon_bullets = [] # We need a list to track the active shots
+cannon_shoot = True # This tracks the state of the Spacebar when shooting
 
 
 # Creating the arc line for the Cannon's aim
@@ -79,14 +81,31 @@ def draw_arc_from_cannon():
 # Cannon Game
 def cannon_game():
     weapon_cannon.draw()
-    draw_arc_from_cannon()
+
+    if (cannon_shoot and not cannon_bullets):
+        draw_arc_from_cannon()
 
     weapon_cannon.angle = -angle_deg
 
+    # Displaying the angle and power variables to the player
     screen.draw.text(
         f"{deg_to_show}°\nPower: {power}",
         (weapon_cannon.x - 120, weapon_cannon.y + 10),
-        fontsize = 25,
+        fontname = "arial",
+        fontsize = 18,
+        color = "white"
+    )
+
+    # Draw cannon bullets
+    for i in cannon_bullets:
+        i["Actor"].draw()
+
+    # Telling the player how to shoot
+    screen.draw.text(
+        "Press SPACE to shoot",
+        (WIDTH // 2 - 100, HEIGHT -40),
+        fontname = "arial",
+        fontsize = 18,
         color = "white"
     )
 
@@ -140,6 +159,23 @@ def draw_menu():
     btn_instructions.draw()
     btn_settings.draw()
 
+    # Title
+    screen.draw.text(
+        f"Ayee Arr Arrr",
+        (WIDTH // 2 - 100, 30),
+        fontname = "arialbd",
+        fontsize = 42,
+        color = "black"
+    )
+
+    screen.draw.text(
+        "By Daniel Rabi, Myles Obrigewitsch, and Shelby Cyr",
+        (WIDTH // 2 - 250, 80),
+        fontname = "arialbd",
+        fontsize = 22,
+        color = "black"
+    )
+
     if settings_open:
         win_w, win_h = screen.surface.get_size()
         draw_settings_panel(win_w, win_h)
@@ -159,8 +195,9 @@ def draw_settings_panel(win_w, win_h):
     screen.draw.text(
         "Settings",
         midtop=(panel_rect.centerx, panel_rect.top + 10),
-        color = "white",
-        fontsize=32,
+        fontname = "arial",
+        fontsize = 30,
+        color = "white"
     )
 
     btn_vol_up.draw()
@@ -265,8 +302,9 @@ def update():
             weapon_parrot.right = WIDTH
 
     if (current_screen == "Game" and selected_weapon == "cannon"):
-        global angle_deg, deg_to_show, power
+        global angle_deg, deg_to_show, power, cannon_shoot
 
+        # Angle Controls
         if (keyboard.left):
             angle_deg -= 1
             deg_to_show -= 1
@@ -274,16 +312,55 @@ def update():
         if (keyboard.right):
             angle_deg += 1
             deg_to_show += 1
+    
+        angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
+        deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
 
+        # Power Controls
         if (keyboard.up):
             power += 1
 
         if (keyboard.down):
             power -= 1
 
-        angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
-        deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
         power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
+
+        # Shooting Controls - Spacebar to shoot
+        g = 9.81
+        t = 0.15 # Time per frame in seconds
+        v = power
+        deg_to_show_rad = math.radians(deg_to_show)
+
+        if (keyboard.space and cannon_shoot):
+            deg_to_show_rad = math.radians(deg_to_show)
+        
+            start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad)
+            start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
+
+            end_x = -v * math.cos(deg_to_show_rad)
+            end_y = -v * math.sin(deg_to_show_rad)
+
+            bullet_dic = {
+                "Actor": cannon_bullet,
+                "x": start_x,
+                "y": start_y,
+                "Ending x": end_x,
+                "Ending y": end_y
+            }
+            bullet_dic["Actor"].pos = (start_x, start_y)
+            cannon_bullets.append(bullet_dic)
+
+            cannon_shoot = False # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
+
+        # Reseting cannon_shoot after Spacebar is released.
+        if (not keyboard.space):
+            cannon_shoot = True
+
+        for i in cannon_bullets:
+            i["x"] += i["Ending x"] * t
+            i["Ending y"] += g * t # Gravity
+            i["y"] += i["Ending y"] * t
+            i["Actor"].pos = (i["x"], i["y"])
 
 
 pgzrun.go()
