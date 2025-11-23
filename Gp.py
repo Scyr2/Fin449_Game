@@ -2,6 +2,8 @@ import pygame
 import pgzrun
 import math
 
+from pgzero.actor import Actor
+
 # Base sizes
 base_width = 800
 base_height = 600
@@ -161,21 +163,6 @@ def draw_menu():
     btn_settings.draw()
 
     # Title
-    screen.draw.text(
-        f"Ayee Arr Arrr",
-        (WIDTH // 2 - 100, 30),
-        fontname = "arialbd",
-        fontsize = 42,
-        color = "black"
-    )
-
-    screen.draw.text(
-        "By Daniel Rabi, Myles Obrigewitsch, and Shelby Cyr",
-        (WIDTH // 2 - 250, 80),
-        fontname = "arialbd",
-        fontsize = 22,
-        color = "black"
-    )
 
     if settings_open:
         win_w, win_h = screen.surface.get_size()
