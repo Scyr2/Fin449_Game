@@ -21,6 +21,7 @@ btn_vol_up = Actor("btn_volume_up")
 btn_vol_down = Actor("btn_volume_down")
 btn_vol_mute = Actor("btn_volume_mute")
 btn_instructions = Actor("btn_instructions")
+btn_back = Actor("btn_back")
 
 # Selection Screen Actors
 btn_parrot = Actor("btn_parrot")
@@ -127,10 +128,12 @@ def selections_menu():
     btn_easy.pos = (300, 175)
     btn_medium.pos = (300, 325)
     btn_hard.pos = (300, 450)
+    btn_back.pos = (40, 20)
 
 # In Game Buttons and Actors
 def game_menu():
     player_ship.pos = (700, 400)
+    btn_back.pos = (40, 20)
 
 
 # Draw background image to cover screen
@@ -212,6 +215,7 @@ def draw_selections():
     btn_easy.draw()
     btn_medium.draw()
     btn_hard.draw()
+    btn_back.draw()
 
 
 # Game screen
@@ -219,6 +223,8 @@ def draw_game():
     draw_background_cover(images.game_background)
     game_menu()
     player_ship.draw()
+    btn_back.draw()
+
     if selected_weapon == "parrot":
         weapon_parrot.draw()
     if selected_weapon == "cannon":
@@ -267,19 +273,27 @@ def on_mouse_down(pos):
 
 # Selections click handling
     if current_screen == "Selections":
-
+        if (btn_back.collidepoint(pos)):
+            current_screen = "Menu"
+        
         if btn_parrot.collidepoint(pos):
             selected_weapon = "parrot"
             current_screen = "Game"
             weapon_parrot.pos = (450, 100)
+
         elif btn_cannon.collidepoint(pos):
             selected_weapon = "cannon"
             current_screen = "Game"
             weapon_cannon.pos = (650, 540)
+
         elif btn_blunderbuss.collidepoint(pos):
             selected_weapon = "blunderbuss"
             current_screen = "Game"
             weapon_blunderbuss.pos = (650, 520)
+
+    if current_screen == "Game" and btn_back.collidepoint(pos):
+        current_screen = "Selections"
+            
 # Game Loop
 
 # Parrot Movement
