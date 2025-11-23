@@ -42,13 +42,16 @@ angle_deg = 0 # Cannon actual angle (degrees)
 deg_to_show = 25 # Cannon base angle (degrees)
 line_length = 150 # Length of the aiming line
 power = 0
+# Offset from cannon center to barrel tip (adjust to match your image)
+barrel_offset_x = 44
+barrel_offset_y = 14
 
 
 # Creating the arc line for the Cannon's aim
 def draw_arc_from_cannon():
-    g = 9.81
-    t = 0
-    v = power
+    g = 9.81 # Gravity
+    t = 0 # Time step, which is also the accurancy of the line
+    v = power # Velocity
     deg_to_show_rad = math.radians(deg_to_show)
 
     start_x = weapon_cannon.x - line_length / 3.1 * math.cos(deg_to_show_rad)
@@ -156,7 +159,7 @@ def draw_settings_panel(win_w, win_h):
     screen.draw.text(
         "Settings",
         midtop=(panel_rect.centerx, panel_rect.top + 10),
-        color="white",
+        color = "white",
         fontsize=32,
     )
 
@@ -261,25 +264,26 @@ def update():
         if weapon_parrot.right > WIDTH:
             weapon_parrot.right = WIDTH
 
-    global angle_deg, deg_to_show, power
+    if (current_screen == "Game" and selected_weapon == "cannon"):
+        global angle_deg, deg_to_show, power
 
-    if (keyboard.left):
-        angle_deg -= 1
-        deg_to_show -= 1
+        if (keyboard.left):
+            angle_deg -= 1
+            deg_to_show -= 1
     
-    if (keyboard.right):
-        angle_deg += 1
-        deg_to_show += 1
+        if (keyboard.right):
+            angle_deg += 1
+            deg_to_show += 1
 
-    if (keyboard.up):
-        power += 1
+        if (keyboard.up):
+            power += 1
 
-    if (keyboard.down):
-        power -= 1
+        if (keyboard.down):
+            power -= 1
 
-    angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
-    deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
-    power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
+        angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
+        deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
+        power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
 
 
 pgzrun.go()
