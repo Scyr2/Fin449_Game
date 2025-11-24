@@ -32,6 +32,13 @@ btn_blunderbuss = Actor("btn_blunderbuss")
 btn_easy = Actor("btn_easy")
 btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
+btn_number_6 = Actor("btn_number_6")
+btn_number_7 = Actor("btn_number_7")
+btn_number_8 = Actor("btn_number_8")
+btn_number_9 = Actor("btn_number_9")
+btn_number_10 = Actor("btn_number_10")
+btn_number_11 = Actor("btn_number_11")
+
 #Need to add some sort of plunder system for turns here too later.
 
 # In-Game Actors
@@ -131,7 +138,12 @@ def selections_menu():
     btn_medium.pos = (300, 325)
     btn_hard.pos = (300, 450)
     btn_back.pos = (20, 20)
-
+    btn_number_6.pos = (50, 100)
+    btn_number_7.pos = (50, 250)
+    btn_number_8.pos = (50, 400)
+    btn_number_9.pos = (150, 100)
+    btn_number_10.pos = (150, 250)
+    btn_number_11.pos = (150, 400)
 # In Game Buttons and Actors
 def game_menu():
     player_ship.pos = (700, 400)
@@ -203,7 +215,12 @@ def draw_selections():
     btn_medium.draw()
     btn_hard.draw()
     btn_back.draw()
-
+    btn_number_6.draw()
+    btn_number_7.draw()
+    btn_number_8.draw()
+    btn_number_9.draw()
+    btn_number_10.draw()
+    btn_number_11.draw()
 
 # Game screen
 def draw_game():
