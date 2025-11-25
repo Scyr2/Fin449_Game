@@ -253,6 +253,8 @@ def on_mouse_down(pos):
 
         if btn_play.collidepoint(pos):
             current_screen = "Selections"
+        # Optional: Uncomment line below if you want music to stop when leaving menu
+        # music.stop()
 
         elif btn_instructions.collidepoint(pos):
             print("Instructions")
@@ -264,14 +266,22 @@ def on_mouse_down(pos):
 
             if btn_vol_up.collidepoint(pos):
                 volume = min(1.0, volume + 0.1)
+                if not muted: # Only updates when not muted
+                    music.set_volume(volume)
                 print("Volume up:", round(volume, 2))
 
             elif btn_vol_down.collidepoint(pos):
                 volume = max(0.0, volume - 0.1)
+                if not muted:
+                    music.set_volume(volume)
                 print("Volume down:", round(volume, 2))
 
             elif btn_vol_mute.collidepoint(pos):
                 muted = not muted
+                if music:
+                    music.set_volume(0)
+                else:
+                    music.set_volume(volume)
                 print("Muted:", muted)
 
 
@@ -378,5 +388,9 @@ def update():
             i["y"] += i["Ending y"] * t
             i["Actor"].pos = (i["x"], i["y"])
 
+
+#Music start on title screen
+music.play("title_screen")
+music.set_volume(volume)
 
 pgzrun.go()
