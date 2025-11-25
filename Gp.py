@@ -47,6 +47,13 @@ weapon_parrot = Actor("weapon_parrot")
 weapon_cannon = Actor("weapon_cannon")
 weapon_blunderbuss = Actor("weapon_blunderbuss")
 cannon_bullet = Actor("weapon_cannon_bullet")
+parrot_bullet = Actor("weapon_parrot_bullet")
+
+
+#Settings for the Parrot Game
+parrot_bullets = [] #Active shots for parrot
+parrot_shoot = True # This tracks the state of the Spacebar when shooting
+
 
 # Settings for the Cannon Game
 angle_deg = 0 # Cannon actual angle (degrees)
@@ -57,10 +64,13 @@ cannon_bullets = [] # We need a list to track the active shots
 cannon_shoot = True # This tracks the state of the Spacebar when shooting
 
 
+
+
+
 # Creating the arc line for the Cannon's aim
 def draw_arc_from_cannon():
     g = 9.81 # Gravity
-    t = 0 # Time step, which is also the accurancy of the line
+    t = 0 # Time step, which is also the accuracy of the line
     v = power # Velocity
     deg_to_show_rad = math.radians(deg_to_show)
 
@@ -231,6 +241,8 @@ def draw_game():
 
     if selected_weapon == "parrot":
         weapon_parrot.draw()
+        for i in parrot_bullets:
+            i["Actor"].draw()
     if selected_weapon == "cannon":
         cannon_game()        
     if selected_weapon == "blunderbuss":
@@ -326,7 +338,52 @@ def update():
             weapon_parrot.left = 0
         if weapon_parrot.right > WIDTH:
             weapon_parrot.right = WIDTH
+        # Draw cannon bullets
 
+
+
+    g = 9.81
+    t = 0.17  # Time per frame in seconds
+#Parrot projectile stuff
+    global parrot_shoot
+    if (keyboard.space and parrot_shoot):
+
+
+        start_x = weapon_parrot.x
+        start_y = weapon_parrot.y
+
+        end_x = start_x
+        end_y = HEIGHT - 50
+
+        parrot_dic = {
+            "Actor": Actor("weapon_parrot_bullet"),  # not cannon_bullet!
+            "x": weapon_parrot.x,
+            "y": weapon_parrot.y,
+            "vy": 0
+        }
+
+        parrot_dic["Actor"].pos = (start_x, start_y)
+        parrot_bullets.append(parrot_dic)
+
+        parrot_shoot = False  # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
+
+        # Reseting parrot_shoot after Spacebar is released.
+    if (not keyboard.space):
+        parrot_shoot = True
+
+    for i in parrot_bullets:
+        i["vy"] += g * t  # accelerate downward
+        i["y"] += i["vy"] * t  # update position
+        i["Actor"].pos = (i["x"], i["y"])
+
+
+
+
+
+#Parrot ends above here.
+
+
+    #Cannon stuff below here
     if (current_screen == "Game" and selected_weapon == "cannon"):
         global angle_deg, deg_to_show, power, cannon_shoot
 
