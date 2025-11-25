@@ -189,15 +189,15 @@ def draw_settings_panel(win_w, win_h):
         int(win_h * 0.50),
     )
 
-    screen.draw.filled_rect(panel_rect, (0, 0, 0))
-    screen.draw.rect(panel_rect, "white")
+    screen.draw.filled_rect(panel_rect, (255, 255, 255))
+    screen.draw.rect(panel_rect, "black")
 
     screen.draw.text(
         "Settings",
         midtop=(panel_rect.centerx, panel_rect.top + 10),
-        fontname = "arial",
+        fontname = "pixel_reg",
         fontsize = 30,
-        color = "white"
+        color = "black"
     )
 
     btn_vol_up.draw()
