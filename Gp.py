@@ -16,6 +16,7 @@ settings_open = False
 volume = 0.5
 muted = False
 selected_weapon = None
+selected_level = None
 
 # Button Actors
 btn_play = Actor("btn_play")
@@ -78,6 +79,14 @@ game_over = False
 current_turn = "Player"
 rounds_left = plunders
 pirate_r_guess = None
+midpoint = [0, 1.0]
+player_message_timer = 0.0
+pending_pirate_turn = False
+pirate_message_timer = 0.0 # How long to keep the Pirate's message
+pirate_has_acted = False # An indicator of whether the Pirate made his turn
+pending_player_turn = False
+player_turn_message_timer = 0.0
+last_player_message = ""
 
 
 
@@ -141,7 +150,7 @@ def draw_arc_from_cannon():
 def cannon_game():
     weapon_cannon.draw()
 
-    if (cannon_shoot and not cannon_bullets):
+    if cannon_shoot and not cannon_bullets:
         draw_arc_from_cannon()
 
     weapon_cannon.angle = -angle_deg
@@ -331,7 +340,7 @@ def draw():
 
 # Click handling
 def on_mouse_down(pos):
-    global current_screen, settings_open, volume, muted, selected_weapon
+    global current_screen, settings_open, volume, muted, selected_weapon, selected_level
     global plunder_box_active
 
     if current_screen == "Menu":
@@ -397,6 +406,13 @@ def on_mouse_down(pos):
             current_screen = "Game"
             weapon_blunderbuss.pos = (650, 520)
 
+        if btn_easy.collidepoint(pos):
+            selected_level = "Easy"
+        elif btn_medium.collidepoint(pos):
+            selected_level = "Medium"
+        elif btn_hard.collidepoint(pos):
+            selected_level = "Hard"
+
     if current_screen == "Game" and btn_back.collidepoint(pos):
         current_screen = "Selections"
             
@@ -407,10 +423,29 @@ def update():
     global parrot_shoot
     global rounds_left, current_turn, game_over, pirate_r_guess
     global angle_deg, deg_to_show, power, cannon_shoot
-    global landing_x, player_r_guess, shot_message
+    global landing_x, player_r_guess, shot_message, last_player_message
+    global pirate_has_acted, pirate_message_timer
+    global player_message_timer, pending_pirate_turn, pending_player_turn, player_turn_message_timer
 
     g = 9.81
     t = 0.17 # Time per frames in seconds
+
+    if pending_pirate_turn and not game_over:
+        player_message_timer -= t
+
+        if player_message_timer <= 0:
+            pending_pirate_turn = False
+            current_turn = "Pirate"
+            pirate_has_acted = False
+            pirate_message_timer = 0.0
+
+    if pending_player_turn and not game_over:
+        player_turn_message_timer -= t
+
+        if player_turn_message_timer <= 0:
+            pending_player_turn = False
+            current_turn = "Player"
+            shot_message = "ARR, It's Your Turn Captin!\n" + last_player_message[24:]
     
     # Working on the Parrot Game
     if current_screen == 'Game' and selected_weapon == 'parrot':
@@ -432,14 +467,14 @@ def update():
 
 
         # Parrot projectile stuff
-        if (keyboard.space and parrot_shoot):
+        if keyboard.space and parrot_shoot:
             start_x = weapon_parrot.x
-            start_y = weapon_parrot.y
+            start_y = weapon_parrot.y + 50
 
             parrot_dic = {
-                "Actor": Actor("weapon_parrot_bullet"),  # not cannon_bullet!
-                "x": weapon_parrot.x,
-                "y": weapon_parrot.y,
+                "Actor": Actor("weapon_parrot_bullet"),  # Not cannon_bullet!
+                "x": start_x,
+                "y": start_y,
                 "vy": 0
             }
 
@@ -448,13 +483,13 @@ def update():
 
             parrot_shoot = False  # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
 
-        # Reseting parrot_shoot after Spacebar is released.
-    if (not keyboard.space):
+    # Reseting parrot_shoot after Spacebar is released.
+    if not keyboard.space:
         parrot_shoot = True
 
     for i in parrot_bullets:
-        i["vy"] += g * t  # accelerate downward
-        i["y"] += i["vy"] * t  # update position
+        i["vy"] += g * t  # Accelerate downward
+        i["y"] += i["vy"] * t  # Update position
         i["Actor"].pos = (i["x"], i["y"])
 
         if i["y"] > HEIGHT + 50: # If it's off the screen
@@ -463,118 +498,151 @@ def update():
 
 
     # Working on the Cannon Game
-    if (current_screen == "Game" and selected_weapon == "cannon"):
-
+    if current_screen == "Game" and selected_weapon == "cannon":
         if not game_over and current_turn == "Pirate":
-
             pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
-            if pirate_r_guess == player_current_r:
-                shot_message = "The Pirate Hit You! You Lost!"
-                game_over = True
+            # If the Pirate did not play yet    
+            if not pirate_has_acted:
+
+                # Setting the Easy Level Game with the Bisection Method
+                if selected_level == "Easy":
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+                #elif selected_level == "Medium":
+
+                if abs(pirate_r_guess - player_current_r) < 0.01:
+                    shot_message = (
+                        "The Pirate Hit You! You Lost!"
+                        f"\nPirate guessed r = {pirate_r_guess}"
+                    )
+                    game_over = True
+                else:
+                    rounds_left -= 1
+
+                    if rounds_left <= 0:
+                        shot_message = (
+                            f"Pirate guessed r = {pirate_r_guess}"
+                            "\nOut of Plunders! Draw / You Survived!"
+                        )
+                        game_over = True
+                    else:
+                        shot_message = (
+                            "Phew... The Pirate Missed Us, Captin!"
+                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nBlood (Cost): {blood}"
+                            f"\nBooty (Return): {booty}"
+                            f"\nYour Current r value: {player_current_r}"
+                            f"\nPlunders: {plunders}"
+                            f"\nRounds left: {rounds_left}"
+                        )
+
+                pirate_message_timer = 15.0
+                pirate_has_acted = True
+
             else:
-                rounds_left -= 1
+                pirate_message_timer -= t
 
-                if rounds_left <= 0:
-                    shot_message = "Out of Plunders! Draw / You Survived!"
-                    game_over = True
-                else:
-                    current_turn = "Player"
-                    shot_message = (
-                        "Pirate Missed!"
-                        f"\nPlayer's r guess: {player_r_guess}"
-                        f"\nPirate's Current r value: {pirate_current_r}"
-                        f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
-                        f"\nBooty (Return): {booty}"
-                        f"\nBlood (Cost): {blood}"
-                        f"\nPlunders: {plunders}"
-                        f"\nRounds left: {rounds_left}"
-                        )
+                if pirate_message_timer <= 0 and not game_over:
+                    pirate_has_acted = False
+                    pending_player_turn = True
+                    player_turn_message_timer = 10.0
+                    current_turn = "Between" # Freezing shooting
 
-        # Angle Controls
-        if (keyboard.left):
-            angle_deg -= 1
-            deg_to_show -= 1
-    
-        if (keyboard.right):
-            angle_deg += 1
-            deg_to_show += 1
-    
-        angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
-        deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
 
-        # Power Controls
-        if (keyboard.up):
-            power += 1
+        if not game_over and current_turn == "Player":
 
-        if (keyboard.down):
-            power -= 1
-
-        power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
-
+            # Angle Controls
+            if keyboard.left:
+                angle_deg -= 1
+                deg_to_show -= 1
         
-        v = power
-        deg_to_show_rad = math.radians(deg_to_show)
-
-        if (keyboard.space and cannon_shoot and not game_over):
+            if keyboard.right:
+                angle_deg += 1
+                deg_to_show += 1
         
-            start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # x starting value for the weapon_cannon_buller the image
-            start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
+            angle_deg = max(-25, min(65, angle_deg)) # Making sure that -25 <= angle actual degree <= 65
+            deg_to_show = max(0, min(90, deg_to_show)) # Making sure that 0 <= base angle degree <= 90
 
-            end_x = -v * math.cos(deg_to_show_rad)
-            end_y = -v * math.sin(deg_to_show_rad)
+            # Power Controls
+            if keyboard.up:
+                power += 1
 
-            bullet_dic = {
-                "Actor": cannon_bullet,
-                "x": start_x,
-                "y": start_y,
-                "Ending x": end_x,
-                "Ending y": end_y
-            }
-            bullet_dic["Actor"].pos = (start_x, start_y)
-            cannon_bullets.append(bullet_dic)
+            if keyboard.down:
+                power -= 1
 
-            cannon_shoot = False # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
+            power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
 
-        # Reseting cannon_shoot after Spacebar is released.
-        if (not keyboard.space):
-            cannon_shoot = True
+            
+            v = power
+            deg_to_show_rad = math.radians(deg_to_show)
 
-        for i in cannon_bullets:
-            i["x"] += i["Ending x"] * t
-            i["Ending y"] += g * t # Gravity
-            i["y"] += i["Ending y"] * t
-            i["Actor"].pos = (i["x"], i["y"])
+            if keyboard.space and cannon_shoot and not game_over and current_turn == "Player":
+            
+                start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # x starting value for the weapon_cannon_buller the image
+                start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
 
-            if i["y"] >= HEIGHT or i["x"] <= 0:
-                landing_x = i["x"] # We're saving the x value when x lands
+                end_x = -v * math.cos(deg_to_show_rad)
+                end_y = -v * math.sin(deg_to_show_rad)
 
-                player_r_guess = max(0, min(1, landing_x / WIDTH)) # The r guess the player made can only be between 0 and 1 and is calculated by getting its proportion to the entire screen.
-                player_r_guess = round(player_r_guess, 2)
+                bullet_dic = {
+                    "Actor": cannon_bullet,
+                    "x": start_x,
+                    "y": start_y,
+                    "Ending x": end_x,
+                    "Ending y": end_y
+                }
+                bullet_dic["Actor"].pos = (start_x, start_y)
+                cannon_bullets.append(bullet_dic)
 
-                if abs(player_r_guess - pirate_current_r) < 0.01:
-                    shot_message = "ARR You Won!"
-                    game_over = True
-                else:
-                    current_turn = "Pirate"
+                cannon_shoot = False # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
 
-                    shot_message = (
-                        "You Missed!"
-                        f"\nPlayer's r guess: {player_r_guess}"
-                        f"\nPirate's Current r value: {pirate_current_r}"
-                        f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
-                        f"\nBooty (Return): {booty}"
-                        f"\nBlood (Cost): {blood}"
-                        f"\nPlunders: {plunders}"
-                        )
+            # Reseting cannon_shoot after Spacebar is released.
+            if not keyboard.space:
+                cannon_shoot = True
 
-                cannon_bullets.remove(i)  
+            for i in cannon_bullets:
+                i["x"] += i["Ending x"] * t
+                i["Ending y"] += g * t # Gravity
+                i["y"] += i["Ending y"] * t
+                i["Actor"].pos = (i["x"], i["y"])
+
+                if i["y"] >= HEIGHT or i["x"] <= 0:
+                    landing_x = i["x"] # We're saving the x value when x lands
+
+                    player_r_guess = max(0, min(1, landing_x / WIDTH)) # The r guess the player made can only be between 0 and 1 and is calculated by getting its proportion to the entire screen.
+                    player_r_guess = round(player_r_guess, 2)
+
+                    if abs(player_r_guess - pirate_current_r) < 0.01:
+                        shot_message = "ARR You Won!"
+                        game_over = True
+                    else:
+                        last_player_message = (
+                            "You Missed Him, Captin!"
+                            f"\nPirate's Current r value: {pirate_current_r}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                            f"\nBlood (Cost): {blood}"
+                            f"\nBooty (Return): {booty}"
+                            f"\nPlayer's r guess: {player_r_guess}"
+                            f"\nPlunders: {plunders}"
+                            )
+                        shot_message = last_player_message
+                        current_turn = "Resolving" # We're doing this so that the player wouldn't be able to shoot after he made a shot
+                        player_message_timer = 30.0
+                        pending_pirate_turn = True
+
+                    cannon_bullets.remove(i)  
 
 
 # This function is for handling the PLunders text box
 def on_key_down(key):
     global plunder_text, plunder_box_active, plunders
-    global rounds_left, current_turn, game_over, pirate_r_guess
+    global rounds_left, current_turn, game_over, pirate_r_guess, pirate_current_r, player_current_r
 
 
     if not plunder_box_active:
@@ -596,6 +664,9 @@ def on_key_down(key):
         
         plunder_text = "" # Clear box after enter
         plunder_box_active = False
+        midpoint[0], midpoint[1] = 0, 1.0
+        pirate_current_r = round(random.choice(pirate_r_list), 2)
+        player_current_r = random.choice(pirate_r_list)
 
         # Reset game state that depends on plunders
         current_turn = "Player"
