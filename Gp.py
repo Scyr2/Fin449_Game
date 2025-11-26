@@ -4,6 +4,7 @@ import math
 import random
 
 from pgzero.actor import Actor
+from pygame.gfxdraw import rectangle
 
 # Base sizes
 base_width = 800
@@ -159,7 +160,7 @@ def cannon_game():
     screen.draw.text(
         f"{deg_to_show}°\nPower: {power}",
         (weapon_cannon.x - 120, weapon_cannon.y + 10),
-        fontname = "arial",
+        fontname = "pixel_reg",
         fontsize = 18,
         color = "white"
     )
@@ -172,8 +173,8 @@ def cannon_game():
     screen.draw.text(
         "Press SPACE to shoot",
         (WIDTH // 2 - 100, HEIGHT -40),
-        fontname = "arial",
-        fontsize = 18,
+        fontname = "pixel_reg",
+        fontsize = 25,
         color = "white"
     )
 
@@ -181,7 +182,7 @@ def cannon_game():
         screen.draw.text(
             shot_message,
             (60, 60),
-            fontname = "arial",
+            fontname = "pixel_reg",
             fontsize = 22,
             color = "white"
         )
@@ -189,7 +190,7 @@ def cannon_game():
     screen.draw.text(
         f"Turn: {current_turn.upper()} | Rounds left: {rounds_left}",
         (60, 20),
-        fontname = "arial",
+        fontname = "pixel_reg",
         fontsize = 26,
         color = "white"
     )
@@ -278,8 +279,15 @@ def draw_settings_panel(win_w, win_h):
 
 # Weapon selection and difficulty selection screen
 def draw_selections():
-    draw_background_cover(images.selections_background)
     selections_menu()
+    draw_background_cover(images.selections_background)
+    pirate_rect = Rect(
+        plunders_box_img.left+150,
+        plunders_box_img.top+230,
+        plunders_box_img.width/15,
+        plunders_box_img.height/5
+    )
+    screen.draw.filled_rect(pirate_rect, "white")
     btn_parrot.draw()
     btn_cannon.draw()
     btn_blunderbuss.draw()
@@ -291,7 +299,7 @@ def draw_selections():
 
     border_color = "orange" if plunder_box_active else "black"
 
-    screen.draw.filled_rect(plunders_box, (255, 255, 255)) # Drawing the Plunders text box
+    screen.draw.filled_rect(plunders_box, "white") # Drawing the Plunders text box
     screen.draw.rect(plunders_box, border_color) # Drawing the border of the Plunders text box
 
     screen.draw.text(
@@ -316,8 +324,28 @@ def draw_game():
         screen.draw.text(
             "Press SPACE to shoot",
             (WIDTH // 2 - 100, HEIGHT -40),
-            fontname = "arial",
-            fontsize = 18,
+            fontname = "pixel_reg",
+            fontsize = 25,
+            color = "white"
+        )
+
+    # New code start for parrot - Myles
+        # Game info to display
+        screen.draw.text(
+            f"Turn:{current_turn.upper()} | Rounds left: {rounds_left}",
+            (60,20),
+            fontname = "pixel_reg",
+            fontsize = 26,
+            color = "white"
+        )
+
+        # Display results of shot for parrot
+        if shot_message:
+            screen.draw.text(
+            shot_message,
+            (60,60),
+            fontname = "pixel_reg",
+            fontsize = 22,
             color = "white"
         )
 
@@ -446,56 +474,110 @@ def update():
             pending_player_turn = False
             current_turn = "Player"
             shot_message = "ARR, It's Your Turn Captin!\n" + last_player_message[24:]
-    
-    # Working on the Parrot Game
+
+    # Pirate game loop using logic from cannon
     if current_screen == 'Game' and selected_weapon == 'parrot':
-        # Move left
-        if keyboard.left:
-            weapon_parrot.x -= 7
 
-        # Move right
-        if keyboard.right:
-            weapon_parrot.x += 7
+        if not game_over and current_turn == "Pirate":
+            # If the Pirate did not play yet
+            if not pirate_has_acted:
+                pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
-        # Keep the parrot on screen
-        if weapon_parrot.left < 0:
-            weapon_parrot.left = 0
-        if weapon_parrot.right > WIDTH:
-            weapon_parrot.right = WIDTH
-        # Draw cannon bullets
+                # Took bisection logic from cannon
+                if selected_level == "Easy":
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
 
+                # Check if Pirate Won
+                if abs(pirate_r_guess - player_current_r) < 0.01:
+                    shot_message = (f"The Pirate Hit You! You Lost!\nPirate guessed r = {pirate_r_guess}")
+                    game_over = True
+                else:
+                    rounds_left -= 1
+                    if rounds_left <= 0:
+                        shot_message = (f"Pirate guessed r = {pirate_r_guess}\nOut of Plunders! Draw!")
+                        game_over = True
+                    else:
+                        shot_message = (
+                            "The Pirate Missed Us!\n"
+                            f"Pirate's r guess: {pirate_r_guess}\n"
+                            f"Pirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                        )
 
+                pirate_message_timer = 15.0
+                pirate_has_acted = True
 
-        # Parrot projectile stuff
-        if keyboard.space and parrot_shoot:
-            start_x = weapon_parrot.x
-            start_y = weapon_parrot.y + 50
+            else:
+                pirate_message_timer -= t
+                if pirate_message_timer <= 0 and not game_over:
+                    pirate_has_acted = False
+                    pending_player_turn = True
+                    player_turn_message_timer = 10.0
+                    current_turn = "Between"
 
-            parrot_dic = {
-                "Actor": Actor("weapon_parrot_bullet"),  # Not cannon_bullet!
-                "x": start_x,
-                "y": start_y,
-                "vy": 0
-            }
+       # How the parrote moves
+        if current_turn == "Player":  # Only move if it's player turn
+            if keyboard.left:
+                weapon_parrot.x -= 7
+            if keyboard.right:
+                weapon_parrot.x += 7
 
-            parrot_dic["Actor"].pos = (start_x, start_y)
-            parrot_bullets.append(parrot_dic)
+            # Keep the parrot on screen
+            if weapon_parrot.left < 0:
+                weapon_parrot.left = 0
+            if weapon_parrot.right > WIDTH:
+                weapon_parrot.right = WIDTH
 
-            parrot_shoot = False  # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
+            if keyboard.space and parrot_shoot:
+                start_x = weapon_parrot.x
+                start_y = weapon_parrot.y + 50 # The 50 will start the drop below the parrot
+                parrot_dic = {
+                    "Actor": Actor("weapon_parrot_bullet"),
+                    "x": start_x,
+                    "y": start_y,
+                    "vy": 0 # We start with a velocity of 0
+                }
+                parrot_bullets.append(parrot_dic)
+                parrot_shoot = False # Stops parrot from multiple shots
 
-    # Reseting parrot_shoot after Spacebar is released.
+                # Reseting parrot_shoot
     if not keyboard.space:
         parrot_shoot = True
 
     for i in parrot_bullets:
-        i["vy"] += g * t  # Accelerate downward
-        i["y"] += i["vy"] * t  # Update position
-        i["Actor"].pos = (i["x"], i["y"])
+        i["vy"] += g * t # gravity is added to the vertical speed, increases with time
+        i["y"] += i["vy"] * t # Updates the vert position to move with time
+        i["Actor"].pos = (i["x"], i["y"]) # Draws our bomb at the new cooridinates
 
-        if i["y"] > HEIGHT + 50: # If it's off the screen
-            parrot_bullets.remove(i)
+        # Hit marker check on ground
+        if i["y"] >= HEIGHT:
+            landing_x = i["x"]
 
+            # Took this math from cannon
+            player_r_guess = max(0, min(1, landing_x / WIDTH))
+            player_r_guess = round(player_r_guess, 2)
 
+            if abs(player_r_guess - pirate_current_r) < 0.01:
+                shot_message = "ARR You Won!"
+                game_over = True
+            else:
+                last_player_message = (
+                    "You Missed Him, Captin!"
+                    f"\nPirate's Current r value: {pirate_current_r}"
+                    f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                    f"\nPlayer's r guess: {player_r_guess}"
+                    f"\nPlunders: {plunders}"
+                )
+                shot_message = last_player_message
+                current_turn = "Resolving"
+                player_message_timer = 30.0
+                pending_pirate_turn = True
+
+            parrot_bullets.remove(i)  # Remove bullet after it hits ground
+    # End of parrot gameloop
 
     # Working on the Cannon Game
     if current_screen == "Game" and selected_weapon == "cannon":
