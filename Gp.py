@@ -563,7 +563,7 @@ def update():
             if weapon_parrot.right > WIDTH:
                 weapon_parrot.right = WIDTH
 
-            if keyboard.space and parrot_shoot:
+            if keyboard.space and parrot_shoot and len(parrot_bullets) == 0:
                 start_x = weapon_parrot.x
                 start_y = weapon_parrot.y + 50 # The 50 will start the drop below the parrot
                 parrot_dic = {
@@ -696,7 +696,7 @@ def update():
             v = power
             deg_to_show_rad = math.radians(deg_to_show)
 
-            if keyboard.space and cannon_shoot and not game_over and current_turn == "Player":
+            if keyboard.space and cannon_shoot and len(cannon_bullets) == 0 and not game_over and current_turn == "Player":
             
                 start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # x starting value for the weapon_cannon_buller the image
                 start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
