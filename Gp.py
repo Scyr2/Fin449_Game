@@ -76,6 +76,8 @@ blunderbuss_offset_x = -73
 blunderbuss_offset_y = -6
 
 
+difficulty_sd = 0.05
+
 
 pirate_r_list = []
 player_r_list = []
@@ -679,7 +681,7 @@ def on_mouse_down(pos):
 
 # Parrot Movement
 def update():
-    global rounds_left, current_turn, game_over, pirate_r_guess, current_screen
+    global rounds_left, current_turn, game_over, pirate_r_guess, current_screen, difficulty_sd
     global angle_deg, deg_to_show, power, parrot_shoot, cannon_shoot, blunderbuss_shoot, blunderbuss_angle_deg
     global landing_x, player_r_guess, shot_message, last_player_message
     global pirate_has_acted, pirate_message_timer
@@ -715,6 +717,23 @@ def update():
 
                 # Took bisection logic from cannon
                 if selected_level == "Easy":
+                    difficulty_sd = 0.05
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+
+                elif selected_level == "Medium":
+                    difficulty_sd = 0.03
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+
+                elif selected_level == "Hard":
+                    difficulty_sd = 0.01
                     pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
@@ -797,7 +816,7 @@ def update():
             player_r_guess = max(0, min(1, landing_x / WIDTH))
             player_r_guess = round(player_r_guess, 2)
 
-            if abs(player_r_guess - pirate_current_r) < 0.01:
+            if abs(player_r_guess - pirate_current_r) < difficulty_sd:
                 shot_message = "ARR You Won!"
                 game_over = True
                 current_screen = 'Win'
@@ -827,13 +846,28 @@ def update():
 
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
+                    difficulty_sd = 0.05
                     pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
-
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
                         midpoint[1] = pirate_r_guess
-                #elif selected_level == "Medium":
+
+                elif selected_level == "Medium":
+                    difficulty_sd = 0.03
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+
+                elif selected_level == "Hard":
+                    difficulty_sd = 0.01
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
 
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
@@ -939,7 +973,7 @@ def update():
                     player_r_guess = max(0, min(1, landing_x / WIDTH)) # The r guess the player made can only be between 0 and 1 and is calculated by getting its proportion to the entire screen.
                     player_r_guess = round(player_r_guess, 2)
 
-                    if abs(player_r_guess - pirate_current_r) < 0.01:
+                    if abs(player_r_guess - pirate_current_r) < difficulty_sd:
                         shot_message = "ARR You Won!"
                         game_over = True
                         current_screen = 'Win'
@@ -970,13 +1004,28 @@ def update():
 
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
+                    difficulty_sd = 0.05
                     pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
-
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
                         midpoint[1] = pirate_r_guess
-                #elif selected_level == "Medium":
+
+                elif selected_level == "Medium":
+                    difficulty_sd = 0.03
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+
+                elif selected_level == "Hard":
+                    difficulty_sd = 0.01
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
 
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
@@ -1080,7 +1129,7 @@ def update():
 
                     blunderbuss_sd = round(random.uniform(player_r_guess - 0.02, player_r_guess + 0.02), 4)
 
-                    if abs(blunderbuss_sd - pirate_current_r) < 0.01:
+                    if abs(blunderbuss_sd - pirate_current_r) < difficulty_sd:
                         shot_message = "ARR You Won!"
                         game_over = True
                         current_screen = 'Win'
