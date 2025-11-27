@@ -321,6 +321,36 @@ def blunderbuss_game():
         color = "white"
     )
 
+#Reset game function
+def reset_game():
+    global game_over, current_turn, rounds_left, shot_message
+    global parrot_bullets, cannon_bullets, blunderbuss_bullets
+    global parrot_shoot, cannon_shoot, blunderbuss_shoot
+    global pirate_has_acted, pending_pirate_turn, pending_player_turn, midpoint
+    global pirate_r_guess, player_turn_message_timer, pirate_message_timer
+
+    # Resesting the game state
+    game_over = False
+    current_turn = "Player"
+    rounds_left = plunders
+    shot_message = ""
+
+    # Clearing active bullets
+    parrot_bullets.clear()
+    cannon_bullets.clear()
+    blunderbuss_bullets.clear()
+
+    # Here we reset our opposing pirate logic
+    pirate_has_acted = False
+    pending_pirate_turn = False
+    pending_player_turn = False
+    pirate_r_guess = None
+    midpoint[0] = 0
+    midpoint[1] = 1.0
+
+    # Reseting timers
+    pirate_turn_message_timer = 0.0
+    pirate_message_timer = 0.0
 
 # Layout buttons
 def layout_menu():
@@ -612,6 +642,7 @@ def on_mouse_down(pos):
             selected_level = "Hard"
 
     if current_screen == "Game" and btn_back.collidepoint(pos):
+        reset_game() # calls upon function and resets variables
         current_screen = "Selections"
             
 # Game Loop
