@@ -27,6 +27,7 @@ btn_vol_down = Actor("btn_volume_down")
 btn_vol_mute = Actor("btn_volume_mute")
 btn_instructions = Actor("btn_instructions")
 btn_back = Actor("btn_back")
+btn_start = Actor("btn_play")
 
 # Selection Screen Actors
 btn_parrot = Actor("btn_parrot")
@@ -104,7 +105,6 @@ pirate_has_acted = False # An indicator of whether the Pirate made his turn
 pending_player_turn = False
 player_turn_message_timer = 0.0
 last_player_message = ""
-
 
 
 for i in range(5):
@@ -343,6 +343,8 @@ def selections_menu():
     btn_hard.pos = (500, 475)
     btn_back.pos = (20, 20)
     plunders_box_img.pos = (200, 300)
+    btn_start.pos = (300, 475) # selections screen
+
 # In Game Buttons and Actors
 def game_menu():
     player_ship.pos = (700, 400)
@@ -414,6 +416,16 @@ def draw_selections():
         plunders_box_img.height/5
     )
     screen.draw.filled_rect(pirate_rect, "white")
+
+    # Circle draws behind weapon under here
+    if selected_weapon == "parrot":
+        screen.draw.filled_circle(btn_parrot.pos, 60, "white")
+    elif selected_weapon == "cannon":
+        screen.draw.filled_circle(btn_cannon.pos, 60, "white")
+    elif selected_weapon == "blunderbuss":
+        screen.draw.filled_circle(btn_blunderbuss.pos, 60, "white")
+    # Ends here NOTE actual buttons must come after
+
     btn_parrot.draw()
     btn_cannon.draw()
     btn_blunderbuss.draw()
@@ -444,6 +456,9 @@ def draw_selections():
         color = "black",
         fontname = "pixel_reg",
     )
+
+    if selected_weapon != None: # Button pops up when weapon is picked
+        btn_start.draw()
 
 # Game screen
 def draw_game():
@@ -543,7 +558,7 @@ def on_mouse_down(pos):
 
 
 # Selections click handling
-    if current_screen == "Selections":
+    elif current_screen == "Selections":
     
         # This is for the Plunders text box
         if plunders_box.collidepoint(pos):
@@ -572,18 +587,22 @@ def on_mouse_down(pos):
         
         if btn_parrot.collidepoint(pos):
             selected_weapon = "parrot"
-            current_screen = "Game"
+            #current_screen = "Game"
             weapon_parrot.pos = (450, 100)
 
         elif btn_cannon.collidepoint(pos):
             selected_weapon = "cannon"
-            current_screen = "Game"
+            #current_screen = "Game"
             weapon_cannon.pos = (650, 540)
 
         elif btn_blunderbuss.collidepoint(pos):
             selected_weapon = "blunderbuss"
-            current_screen = "Game"
+            #current_screen = "Game"
             weapon_blunderbuss.pos = (650, 520)
+
+        if btn_start.collidepoint(pos):
+            if selected_weapon != None:
+                current_screen = "Game"
 
         if btn_easy.collidepoint(pos):
             selected_level = "Easy"
