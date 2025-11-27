@@ -670,7 +670,8 @@ def on_mouse_down(pos):
     if current_screen == "Win" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
-    if current_screen == "Loss" and btn_back.collidepoint(pos):
+
+    if current_screen == "Lose" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
             
