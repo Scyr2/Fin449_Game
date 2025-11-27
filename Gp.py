@@ -67,6 +67,7 @@ cannon_bullets = [] # We need a list to track the active shots
 cannon_shoot = True # This tracks the state of the Spacebar when shooting
 
 # Settings for the Blunderbuss Game
+blunderbuss_aim_angle_deg = 0
 blunderbuss_angle_deg = 0
 blunderbuss_bullets = []
 blunderbuss_shoot = True
@@ -131,8 +132,13 @@ def npv_zero(my_r, opponent_r, time_to_maturity):
 
     return npv
 
-def blunderbuss_barrel_tip():
-    rad = math.radians(blunderbuss_angle_deg)
+# Using angle_deg input but we need to reset is to None
+def blunderbuss_barrel_tip(angle_deg = None):
+    # If no angle is given, use the base blunderbuss angle
+    if angle_deg is None:
+        angle_deg = blunderbuss_angle_deg
+    
+    rad = math.radians(angle_deg)
 
     lx = blunderbuss_offset_x
     ly = blunderbuss_offset_y
@@ -175,22 +181,22 @@ def draw_cannon_arc():
 
 
 # Drawing the arc for the Blunderbuss
-def draw_blunderbuss_arc():
+def draw_blunderbuss_arc(shaken_angle_deg = 0):
     g = 9.81 # Gravity
     t = 0 # Time step, which is also the accuracy of the line
     v = power # Velocity
-    blunderbuss_angle_deg_rad = math.radians(blunderbuss_angle_deg)
 
-    #start_x = weapon_blunderbuss.x - line_length / 1.9 * math.cos(deg_to_show_rad)
-    #start_y = weapon_blunderbuss.y - line_length / 9 * math.sin(deg_to_show_rad)
-
-    start_x, start_y = blunderbuss_barrel_tip()
+    # Use the shaken angle for the arc
+    angle_deg = blunderbuss_angle_deg + shaken_angle_deg
+    angle_rad = math.radians(angle_deg)
+    
+    start_x, start_y = blunderbuss_barrel_tip(angle_deg)
 
     positions = []
 
     while True:
-        x = v * math.cos(blunderbuss_angle_deg_rad) * t # # Using the physics equation y(t) = v * cos(θ) * t to find the x value of the point
-        y = v * math.sin(blunderbuss_angle_deg_rad) * t - 0.5 * g * t**2 # Using the physics equation y(t) = v * sin(θ) * t -0.5 * g * t^2 to find the y value of the point
+        x = v * math.cos(angle_rad) * t # # Using the physics equation y(t) = v * cos(θ) * t to find the x value of the point
+        y = v * math.sin(angle_rad) * t - 0.5 * g * t**2 # Using the physics equation y(t) = v * sin(θ) * t -0.5 * g * t^2 to find the y value of the point
 
         screen_x = start_x - x # This will give us the distance from the current point to the next on x-axis
         screen_y = start_y - y # This will give us the distance from the current point to the next on y-axis
@@ -255,12 +261,26 @@ def cannon_game():
 
 
 def blunderbuss_game():
+    global blunderbuss_aim_angle_deg
+
+    shake_angle_deg = 0
+
+    if blunderbuss_shoot and not blunderbuss_bullets:
+        shake_angle_deg = random.uniform(-2, 2) # 2° wiggle
+    
+    # This is the angle we show
+    blunderbuss_aim_angle_deg = blunderbuss_angle_deg + shake_angle_deg
+
+    # Rotate the bluderbuss with the shaken angle
+    weapon_blunderbuss.angle = -blunderbuss_aim_angle_deg
+
+
+    weapon_blunderbuss.angle = -blunderbuss_angle_deg
+
     weapon_blunderbuss.draw()
 
     if blunderbuss_shoot and not blunderbuss_bullets:
-        draw_blunderbuss_arc()
-
-    weapon_blunderbuss.angle = -blunderbuss_angle_deg
+        draw_blunderbuss_arc(shake_angle_deg)
 
     # Displaying the angle and power variables to the player
     screen.draw.text(
@@ -930,17 +950,14 @@ def update():
 
             
             v = power
-            blunderbuss_angle_deg_rad = math.radians(blunderbuss_angle_deg)
+            angle_rad = math.radians(blunderbuss_aim_angle_deg)
 
             if keyboard.space and blunderbuss_shoot and len(blunderbuss_bullets) == 0 and not game_over and current_turn == "Player":
-            
-                #start_x = weapon_blunderbuss.x - line_length / 2.5 * math.cos(deg_to_show_rad) # x starting value for the weapon_blunderbuss_buller the image
-                #start_y = weapon_blunderbuss.y - line_length / 3 * math.sin(deg_to_show_rad)
 
-                start_x, start_y = blunderbuss_barrel_tip()
+                start_x, start_y = blunderbuss_barrel_tip(blunderbuss_aim_angle_deg)
 
-                end_x = -v * math.cos(blunderbuss_angle_deg_rad)
-                end_y = -v * math.sin(blunderbuss_angle_deg_rad)
+                end_x = -v * math.cos(angle_rad)
+                end_y = -v * math.sin(angle_rad)
 
                 bullet_dic_blunderbuss = {
                     "Actor": blunderbuss_bullet,
@@ -970,7 +987,9 @@ def update():
                     player_r_guess = max(0, min(1, landing_x / WIDTH)) # The r guess the player made can only be between 0 and 1 and is calculated by getting its proportion to the entire screen.
                     player_r_guess = round(player_r_guess, 2)
 
-                    if abs(player_r_guess - pirate_current_r) < 0.01:
+                    blunderbuss_sd = round(random.uniform(player_r_guess - 0.02, player_r_guess + 0.02), 4)
+
+                    if abs(blunderbuss_sd - pirate_current_r) < 0.01:
                         shot_message = "ARR You Won!"
                         game_over = True
                     else:
