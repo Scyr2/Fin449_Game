@@ -380,6 +380,12 @@ def game_menu():
     player_ship.pos = (700, 400)
     btn_back.pos = (20, 20)
 
+def win_menu():
+    btn_back.pos = (20, 20)
+
+def loss_menu():
+    btn_back.pos = (20, 20)
+
 
 # Draw background image to cover screen
 def draw_background_cover(image):
@@ -537,12 +543,28 @@ def draw_game():
     if selected_weapon == "blunderbuss":
         blunderbuss_game()
 
+#Win screen
+def draw_win():
+    draw_background_cover(images.win_background)
+    win_menu()
+    reset_game()
+    btn_back.draw()
+# Win screen
+def draw_lose():
+    draw_background_cover(images.loss_background)
+    loss_menu()
+    reset_game()
+    btn_back.draw()
 # Main draw
 def draw():
     if current_screen == "Menu":
         draw_menu()
     if current_screen == "Selections":
         draw_selections()
+    if current_screen == "Win":
+        draw_win()
+    if current_screen == "Lose":
+        draw_lose()
     elif current_screen == "Game":
         draw_game()
 
@@ -644,12 +666,19 @@ def on_mouse_down(pos):
     if current_screen == "Game" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
+
+    if current_screen == "Win" and btn_back.collidepoint(pos):
+        reset_game() # calls upon function and resets variables
+        current_screen = "Selections"
+    if current_screen == "Loss" and btn_back.collidepoint(pos):
+        reset_game() # calls upon function and resets variables
+        current_screen = "Selections"
             
 # Game Loop
 
 # Parrot Movement
 def update():
-    global rounds_left, current_turn, game_over, pirate_r_guess
+    global rounds_left, current_turn, game_over, pirate_r_guess, current_screen
     global angle_deg, deg_to_show, power, parrot_shoot, cannon_shoot, blunderbuss_shoot, blunderbuss_angle_deg
     global landing_x, player_r_guess, shot_message, last_player_message
     global pirate_has_acted, pirate_message_timer
@@ -695,6 +724,7 @@ def update():
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (f"The Pirate Hit You! You Lost!\nPirate guessed r = {pirate_r_guess}")
                     game_over = True
+                    current_screen = 'Lose'
                 else:
                     rounds_left -= 1
                     if rounds_left <= 0:
@@ -763,6 +793,7 @@ def update():
             if abs(player_r_guess - pirate_current_r) < 0.01:
                 shot_message = "ARR You Won!"
                 game_over = True
+                current_screen = 'Win'
             else:
                 last_player_message = (
                     "You Missed Him, Captain!"
@@ -803,6 +834,7 @@ def update():
                         f"\nPirate guessed r = {pirate_r_guess}"
                     )
                     game_over = True
+                    current_screen = "Lose"
                 else:
                     rounds_left -= 1
 
@@ -903,6 +935,7 @@ def update():
                     if abs(player_r_guess - pirate_current_r) < 0.01:
                         shot_message = "ARR You Won!"
                         game_over = True
+                        current_screen = 'Win'
                     else:
                         last_player_message = (
                             "You Missed Him, Captain!"
@@ -944,6 +977,7 @@ def update():
                         f"\nPirate guessed r = {pirate_r_guess}"
                     )
                     game_over = True
+                    current_screen = 'Loss'
                 else:
                     rounds_left -= 1
 
@@ -1042,6 +1076,7 @@ def update():
                     if abs(blunderbuss_sd - pirate_current_r) < 0.01:
                         shot_message = "ARR You Won!"
                         game_over = True
+                        current_screen = 'Win'
                     else:
                         last_player_message = (
                             "You Missed Him, Captain!"
