@@ -632,7 +632,7 @@ def update():
                         game_over = True
                     else:
                         shot_message = (
-                            "The Pirate Missed Us!\n"
+                            "Phew... The Pirate Missed Us, Captain!\n"
                             f"Pirate's r guess: {pirate_r_guess}\n"
                             f"Pirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
                         )
