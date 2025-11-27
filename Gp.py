@@ -473,7 +473,7 @@ def update():
         if player_turn_message_timer <= 0:
             pending_player_turn = False
             current_turn = "Player"
-            shot_message = "ARR, It's Your Turn !\n" + last_player_message[24:]
+            shot_message = "ARR, It's Your Turn Captain!\n" + last_player_message[24:]
 
     # Pirate game loop using logic from cannon
     if current_screen == 'Game' and selected_weapon == 'parrot':
