@@ -649,7 +649,7 @@ def update():
                     current_turn = "Between"
 
        # How the parrote moves
-        if current_turn == "Player":  # Only move if it's player turn
+        if current_turn == "Player" and game_over == False:  # Only move if it's player turn
             if keyboard.left:
                 weapon_parrot.x -= 7
             if keyboard.right:
