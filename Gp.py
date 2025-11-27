@@ -731,11 +731,17 @@ def update():
                     if rounds_left <= 0:
                         shot_message = (f"Pirate guessed r = {pirate_r_guess}\nOut of Plunders! Draw!")
                         game_over = True
+
                     else:
                         shot_message = (
-                            "Phew... The Pirate Missed Us, Captain!\n"
-                            f"Pirate's r guess: {pirate_r_guess}\n"
-                            f"Pirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            "Phew... The Pirate Missed Us, Captain!"
+                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nBlood (Cost): {blood}"
+                            f"\nBooty (Return): {booty}"
+                            f"\nYour Current r value: {player_current_r}"
+                            f"\nPlunders: {plunders}"
+                            f"\nRounds left: {rounds_left}"
                         )
 
                 pirate_message_timer = 15.0
