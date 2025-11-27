@@ -37,6 +37,9 @@ btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
 plunders_box_img = Actor("plunders_box")
 plunders_box = Rect(200, 310, 150, 40)
+easy_box = Rect(425, 132, 150, 86)
+medium_box = Rect(425, 282, 150, 86)
+hard_box = Rect(425, 432, 150, 86)
 
 #Need to add some sort of plunder system for turns here too later.
 
@@ -75,6 +78,10 @@ blood = 0 # This is the initial cost for a project, for example
 plunder_text = ""
 plunder_box_active = False
 plunders = 1
+
+easy_box_active = False
+medium_box_active = False
+hard_box_active = False
 
 game_over = False
 current_turn = "Player"
@@ -211,10 +218,10 @@ def layout_menu():
 def selections_menu():
     btn_parrot.pos = (700, 175)
     btn_cannon.pos = (700, 325)
-    btn_blunderbuss.pos = (700, 450)
+    btn_blunderbuss.pos = (700, 475)
     btn_easy.pos = (500, 175)
     btn_medium.pos = (500, 325)
-    btn_hard.pos = (500, 450)
+    btn_hard.pos = (500, 475)
     btn_back.pos = (20, 20)
     plunders_box_img.pos = (200, 300)
 # In Game Buttons and Actors
@@ -302,6 +309,15 @@ def draw_selections():
     screen.draw.filled_rect(plunders_box, "white") # Drawing the Plunders text box
     screen.draw.rect(plunders_box, border_color) # Drawing the border of the Plunders text box
 
+    easy_level_color = "white" if easy_box_active else "black"
+    screen.draw.rect(easy_box, easy_level_color)
+
+    medium_level_color = "white" if medium_box_active else "black"
+    screen.draw.rect(medium_box, medium_level_color)
+
+    hard_level_color = "white" if hard_box_active else "black"
+    screen.draw.rect(hard_box, hard_level_color)
+
     screen.draw.text(
         plunder_text,
         (plunders_box.x + 5, plunders_box.y + 5),
@@ -369,7 +385,7 @@ def draw():
 # Click handling
 def on_mouse_down(pos):
     global current_screen, settings_open, volume, muted, selected_weapon, selected_level
-    global plunder_box_active
+    global plunder_box_active, easy_box_active, medium_box_active, hard_box_active
 
     if current_screen == "Menu":
 
@@ -415,6 +431,22 @@ def on_mouse_down(pos):
             plunder_box_active = True
         else:
             plunder_box_active = False
+
+        # Highlighting the level buttons
+        if easy_box.collidepoint(pos):
+            easy_box_active = True
+            medium_box_active = False
+            hard_box_active = False
+
+        if medium_box.collidepoint(pos):
+            medium_box_active = True
+            easy_box_active = False
+            hard_box_active = False
+
+        if hard_box.collidepoint(pos):
+            hard_box_active = True
+            medium_box_active = False
+            easy_box_active = False
         
         if (btn_back.collidepoint(pos)):
             current_screen = "Menu"
