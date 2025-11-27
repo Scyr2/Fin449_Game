@@ -473,7 +473,7 @@ def update():
         if player_turn_message_timer <= 0:
             pending_player_turn = False
             current_turn = "Player"
-            shot_message = "ARR, It's Your Turn Captin!\n" + last_player_message[24:]
+            shot_message = "ARR, It's Your Turn !\n" + last_player_message[24:]
 
     # Pirate game loop using logic from cannon
     if current_screen == 'Game' and selected_weapon == 'parrot':
@@ -565,7 +565,7 @@ def update():
                 game_over = True
             else:
                 last_player_message = (
-                    "You Missed Him, Captin!"
+                    "You Missed Him, Captain!"
                     f"\nPirate's Current r value: {pirate_current_r}"
                     f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
                     f"\nPlayer's r guess: {player_r_guess}"
@@ -614,7 +614,7 @@ def update():
                         game_over = True
                     else:
                         shot_message = (
-                            "Phew... The Pirate Missed Us, Captin!"
+                            "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess}"
                             f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
                             f"\nBlood (Cost): {blood}"
@@ -705,7 +705,7 @@ def update():
                         game_over = True
                     else:
                         last_player_message = (
-                            "You Missed Him, Captin!"
+                            "You Missed Him, Captain!"
                             f"\nPirate's Current r value: {pirate_current_r}"
                             f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
                             f"\nBlood (Cost): {blood}"
