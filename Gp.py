@@ -984,7 +984,7 @@ def update():
                         f"\nPirate guessed r = {pirate_r_guess}"
                     )
                     game_over = True
-                    current_screen = 'Loss'
+                    current_screen = 'Lose'
                 else:
                     rounds_left -= 1
 
