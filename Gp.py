@@ -50,6 +50,7 @@ weapon_cannon = Actor("weapon_cannon")
 weapon_blunderbuss = Actor("weapon_blunderbuss")
 cannon_bullet = Actor("weapon_cannon_bullet")
 parrot_bullet = Actor("weapon_parrot_bullet")
+blunderbuss_bullet = Actor("weapon_blunderbuss_bullet")
 
 
 #Settings for the Parrot Game
@@ -64,6 +65,13 @@ line_length = 150 # Length of the aiming line
 power = 0
 cannon_bullets = [] # We need a list to track the active shots
 cannon_shoot = True # This tracks the state of the Spacebar when shooting
+
+# Settings for the Blunderbuss Game
+blunderbuss_angle_deg = 0
+blunderbuss_bullets = []
+blunderbuss_shoot = True
+blunderbuss_offset_x = -73
+blunderbuss_offset_y = -6
 
 
 
@@ -123,10 +131,22 @@ def npv_zero(my_r, opponent_r, time_to_maturity):
 
     return npv
 
+def blunderbuss_barrel_tip():
+    rad = math.radians(blunderbuss_angle_deg)
 
+    lx = blunderbuss_offset_x
+    ly = blunderbuss_offset_y
+
+    rx = lx * math.cos(rad) - ly * math.sin(rad)
+    ry = lx * math.sin(rad) + ly * math.cos(rad)
+
+    start_x = weapon_blunderbuss.x + rx
+    start_y = weapon_blunderbuss.y + ry
+
+    return start_x, start_y
 
 # Creating the arc line for the Cannon's aim
-def draw_arc_from_cannon():
+def draw_cannon_arc():
     g = 9.81 # Gravity
     t = 0 # Time step, which is also the accuracy of the line
     v = power # Velocity
@@ -154,12 +174,43 @@ def draw_arc_from_cannon():
         screen.draw.line(positions[i], positions[i + 1], "yellow")
 
 
+# Drawing the arc for the Blunderbuss
+def draw_blunderbuss_arc():
+    g = 9.81 # Gravity
+    t = 0 # Time step, which is also the accuracy of the line
+    v = power # Velocity
+    blunderbuss_angle_deg_rad = math.radians(blunderbuss_angle_deg)
+
+    #start_x = weapon_blunderbuss.x - line_length / 1.9 * math.cos(deg_to_show_rad)
+    #start_y = weapon_blunderbuss.y - line_length / 9 * math.sin(deg_to_show_rad)
+
+    start_x, start_y = blunderbuss_barrel_tip()
+
+    positions = []
+
+    while True:
+        x = v * math.cos(blunderbuss_angle_deg_rad) * t # # Using the physics equation y(t) = v * cos(θ) * t to find the x value of the point
+        y = v * math.sin(blunderbuss_angle_deg_rad) * t - 0.5 * g * t**2 # Using the physics equation y(t) = v * sin(θ) * t -0.5 * g * t^2 to find the y value of the point
+
+        screen_x = start_x - x # This will give us the distance from the current point to the next on x-axis
+        screen_y = start_y - y # This will give us the distance from the current point to the next on y-axis
+
+        if (screen_x < 0 or screen_y > HEIGHT):
+            break
+
+        positions.append((screen_x, screen_y))
+        t += 0.2 # Time step, which is also the accurancy of the line
+
+    for i in range(len(positions) - 1):
+        screen.draw.line(positions[i], positions[i + 1], "yellow")
+
+
 # Cannon Game
 def cannon_game():
     weapon_cannon.draw()
 
     if cannon_shoot and not cannon_bullets:
-        draw_arc_from_cannon()
+        draw_cannon_arc()
 
     weapon_cannon.angle = -angle_deg
 
@@ -174,6 +225,54 @@ def cannon_game():
 
     # Draw cannon bullets
     for i in cannon_bullets:
+        i["Actor"].draw()
+
+    # Telling the player how to shoot
+    screen.draw.text(
+        "Press SPACE to shoot",
+        (WIDTH // 2 - 100, HEIGHT -40),
+        fontname = "pixel_reg",
+        fontsize = 25,
+        color = "white"
+    )
+
+    if shot_message:
+        screen.draw.text(
+            shot_message,
+            (60, 60),
+            fontname = "pixel_reg",
+            fontsize = 22,
+            color = "white"
+        )
+
+    screen.draw.text(
+        f"Turn: {current_turn.upper()} | Rounds left: {rounds_left}",
+        (60, 20),
+        fontname = "pixel_reg",
+        fontsize = 26,
+        color = "white"
+    )
+
+
+def blunderbuss_game():
+    weapon_blunderbuss.draw()
+
+    if blunderbuss_shoot and not blunderbuss_bullets:
+        draw_blunderbuss_arc()
+
+    weapon_blunderbuss.angle = -blunderbuss_angle_deg
+
+    # Displaying the angle and power variables to the player
+    screen.draw.text(
+        f"{blunderbuss_angle_deg}°\nPower: {power}",
+        (weapon_blunderbuss.x - 120, weapon_blunderbuss.y + 10),
+        fontname = "pixel_reg",
+        fontsize = 18,
+        color = "white"
+    )
+
+    # Draw Blunderbuss bullets
+    for i in blunderbuss_bullets:
         i["Actor"].draw()
 
     # Telling the player how to shoot
@@ -371,7 +470,7 @@ def draw_game():
     if selected_weapon == "cannon":
         cannon_game()        
     if selected_weapon == "blunderbuss":
-        weapon_blunderbuss.draw()
+        blunderbuss_game()
 
 # Main draw
 def draw():
@@ -480,9 +579,8 @@ def on_mouse_down(pos):
 
 # Parrot Movement
 def update():
-    global parrot_shoot
     global rounds_left, current_turn, game_over, pirate_r_guess
-    global angle_deg, deg_to_show, power, cannon_shoot
+    global angle_deg, deg_to_show, power, parrot_shoot, cannon_shoot, blunderbuss_shoot, blunderbuss_angle_deg
     global landing_x, player_r_guess, shot_message, last_player_message
     global pirate_has_acted, pirate_message_timer
     global player_message_timer, pending_pirate_turn, pending_player_turn, player_turn_message_timer
@@ -611,7 +709,7 @@ def update():
             parrot_bullets.remove(i)  # Remove bullet after it hits ground
     # End of parrot gameloop
 
-    # Working on the Cannon Game
+    # The Cannon Game
     if current_screen == "Game" and selected_weapon == "cannon":
         if not game_over and current_turn == "Pirate":
             pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
@@ -704,15 +802,15 @@ def update():
                 end_x = -v * math.cos(deg_to_show_rad)
                 end_y = -v * math.sin(deg_to_show_rad)
 
-                bullet_dic = {
+                bullet_dic_cannon = {
                     "Actor": cannon_bullet,
                     "x": start_x,
                     "y": start_y,
                     "Ending x": end_x,
                     "Ending y": end_y
                 }
-                bullet_dic["Actor"].pos = (start_x, start_y)
-                cannon_bullets.append(bullet_dic)
+                bullet_dic_cannon["Actor"].pos = (start_x, start_y)
+                cannon_bullets.append(bullet_dic_cannon)
 
                 cannon_shoot = False # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
 
@@ -750,7 +848,147 @@ def update():
                         player_message_timer = 30.0
                         pending_pirate_turn = True
 
-                    cannon_bullets.remove(i)  
+                    cannon_bullets.remove(i)
+
+    # The Blunderbuss Game
+    if current_screen == "Game" and selected_weapon == "blunderbuss":
+        if not game_over and current_turn == "Pirate":
+            pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
+
+            # If the Pirate did not play yet    
+            if not pirate_has_acted:
+
+                # Setting the Easy Level Game with the Bisection Method
+                if selected_level == "Easy":
+                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+
+                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                        midpoint[0] = pirate_r_guess
+                    else:
+                        midpoint[1] = pirate_r_guess
+                #elif selected_level == "Medium":
+
+                if abs(pirate_r_guess - player_current_r) < 0.01:
+                    shot_message = (
+                        "The Pirate Hit You! You Lost!"
+                        f"\nPirate guessed r = {pirate_r_guess}"
+                    )
+                    game_over = True
+                else:
+                    rounds_left -= 1
+
+                    if rounds_left <= 0:
+                        shot_message = (
+                            f"Pirate guessed r = {pirate_r_guess}"
+                            "\nOut of Plunders! Draw / You Survived!"
+                        )
+                        game_over = True
+                    else:
+                        shot_message = (
+                            "Phew... The Pirate Missed Us, Captain!"
+                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nBlood (Cost): {blood}"
+                            f"\nBooty (Return): {booty}"
+                            f"\nYour Current r value: {player_current_r}"
+                            f"\nPlunders: {plunders}"
+                            f"\nRounds left: {rounds_left}"
+                        )
+
+                pirate_message_timer = 15.0
+                pirate_has_acted = True
+
+            else:
+                pirate_message_timer -= t
+
+                if pirate_message_timer <= 0 and not game_over:
+                    pirate_has_acted = False
+                    pending_player_turn = True
+                    player_turn_message_timer = 10.0
+                    current_turn = "Between" # Freezing shooting
+
+
+        if not game_over and current_turn == "Player":
+
+            # Angle Controls
+            if keyboard.left:
+                blunderbuss_angle_deg -= 1
+        
+            if keyboard.right:
+                blunderbuss_angle_deg += 1
+        
+            blunderbuss_angle_deg = max(0, min(90, blunderbuss_angle_deg)) # Making sure that 0 <= base angle degree <= 90
+
+            # Power Controls
+            if keyboard.up:
+                power += 1
+
+            if keyboard.down:
+                power -= 1
+
+            power = max(0, min(100, power)) # Limiting power 0 <= Power <= 100
+
+            
+            v = power
+            blunderbuss_angle_deg_rad = math.radians(blunderbuss_angle_deg)
+
+            if keyboard.space and blunderbuss_shoot and len(blunderbuss_bullets) == 0 and not game_over and current_turn == "Player":
+            
+                #start_x = weapon_blunderbuss.x - line_length / 2.5 * math.cos(deg_to_show_rad) # x starting value for the weapon_blunderbuss_buller the image
+                #start_y = weapon_blunderbuss.y - line_length / 3 * math.sin(deg_to_show_rad)
+
+                start_x, start_y = blunderbuss_barrel_tip()
+
+                end_x = -v * math.cos(blunderbuss_angle_deg_rad)
+                end_y = -v * math.sin(blunderbuss_angle_deg_rad)
+
+                bullet_dic_blunderbuss = {
+                    "Actor": blunderbuss_bullet,
+                    "x": start_x,
+                    "y": start_y,
+                    "Ending x": end_x,
+                    "Ending y": end_y
+                }
+                bullet_dic_blunderbuss["Actor"].pos = (start_x, start_y)
+                blunderbuss_bullets.append(bullet_dic_blunderbuss)
+
+                blunderbuss_shoot = False # Waiting for the Spacebar to be released before making another shot, otherwise it will be like a machine gun.
+
+            # Reseting blunderbuss_shoot after Spacebar is released.
+            if not keyboard.space:
+                blunderbuss_shoot = True
+
+            for i in blunderbuss_bullets:
+                i["x"] += i["Ending x"] * t
+                i["Ending y"] += g * t # Gravity
+                i["y"] += i["Ending y"] * t
+                i["Actor"].pos = (i["x"], i["y"])
+
+                if i["y"] >= HEIGHT or i["x"] <= 0:
+                    landing_x = i["x"] # We're saving the x value when x lands
+
+                    player_r_guess = max(0, min(1, landing_x / WIDTH)) # The r guess the player made can only be between 0 and 1 and is calculated by getting its proportion to the entire screen.
+                    player_r_guess = round(player_r_guess, 2)
+
+                    if abs(player_r_guess - pirate_current_r) < 0.01:
+                        shot_message = "ARR You Won!"
+                        game_over = True
+                    else:
+                        last_player_message = (
+                            "You Missed Him, Captain!"
+                            f"\nPirate's Current r value: {pirate_current_r}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                            f"\nBlood (Cost): {blood}"
+                            f"\nBooty (Return): {booty}"
+                            f"\nPlayer's r guess: {player_r_guess}"
+                            f"\nPlunders: {plunders}"
+                            )
+                        shot_message = last_player_message
+                        current_turn = "Resolving" # We're doing this so that the player wouldn't be able to shoot after he made a shot
+                        player_message_timer = 30.0
+                        pending_pirate_turn = True
+
+                    blunderbuss_bullets.remove(i)  
 
 
 # This function is for handling the PLunders text box
