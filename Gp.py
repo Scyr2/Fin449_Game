@@ -71,6 +71,8 @@ line_length = 150 # Length of the aiming line
 power = 0
 cannon_bullets = [] # We need a list to track the active shots
 cannon_shoot = True # This tracks the state of the Spacebar when shooting
+cannon_offset_x = -60
+cannon_offset_y = -30
 
 # Settings for the Blunderbuss Game
 blunderbuss_aim_angle_deg = 0
@@ -172,19 +174,19 @@ def npv_zero(my_r, opponent_r, t, booty):
     return npv, x
 
 # Using angle_deg input but we need to reset is to None
-def blunderbuss_barrel_tip(angle_deg = None):
+def barrel_tip(offset_x, offset_y, weapon_selected, angle, angle_deg = None):
     # If no angle is given, use the base blunderbuss angle
     if angle_deg is None:
-        angle_deg = blunderbuss_angle_deg
+        angle_deg = angle
     
     rad = math.radians(angle_deg)
 
     # Adjusting the axes to their rotating by taking the derivative of x' and y' to adjust.
-    rotated_x = blunderbuss_offset_x * math.cos(rad) - blunderbuss_offset_y * math.sin(rad)
-    rotated_y = blunderbuss_offset_x * math.sin(rad) + blunderbuss_offset_y * math.cos(rad)
+    rotated_x = offset_x * math.cos(rad) - offset_y * math.sin(rad)
+    rotated_y = offset_x * math.sin(rad) + offset_y * math.cos(rad)
 
-    start_x = weapon_blunderbuss.x + rotated_x
-    start_y = weapon_blunderbuss.y + rotated_y
+    start_x = weapon_selected.x + rotated_x
+    start_y = weapon_selected.y + rotated_y
 
     return start_x, start_y
 
@@ -195,8 +197,7 @@ def draw_cannon_arc():
     v = power # Velocity
     deg_to_show_rad = math.radians(deg_to_show)
 
-    start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # Since the cannon image is symmetrical we can do it this way
-    start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
+    start_x, start_y = barrel_tip(cannon_offset_x, cannon_offset_y, weapon_cannon, deg_to_show, angle_deg)
 
     positions = []
 
@@ -227,7 +228,7 @@ def draw_blunderbuss_arc(shaken_angle_deg = 0):
     angle_deg = blunderbuss_angle_deg + shaken_angle_deg
     angle_rad = math.radians(angle_deg)
     
-    start_x, start_y = blunderbuss_barrel_tip(angle_deg)
+    start_x, start_y = barrel_tip(blunderbuss_offset_x, blunderbuss_offset_y, weapon_blunderbuss, blunderbuss_angle_deg, angle_deg)
 
     positions = []
 
@@ -1055,8 +1056,7 @@ def update():
 
             if keyboard.space and cannon_shoot and len(cannon_bullets) == 0 and not game_over and current_turn == "Player":
             
-                start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # x starting value for the weapon_cannon_buller the image
-                start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
+                start_x, start_y = barrel_tip(cannon_offset_x, cannon_offset_y, weapon_cannon, deg_to_show, angle_deg)
 
                 end_x = -v * math.cos(deg_to_show_rad)
                 end_y = -v * math.sin(deg_to_show_rad)
