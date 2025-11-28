@@ -132,7 +132,7 @@ def npv_zero(my_r, opponent_r, time_to_maturity):
     if my_r == 0:
         npv = booty * time_to_maturity # When the discount rate is 0, money in the future is the same as money today
     else:
-        blood = int(booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv) # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
+        blood = booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
 
         npv = booty / my_r * (1 - (1 + my_r)**(-time_to_maturity)) - blood # Since it's an annuity
 
@@ -804,7 +804,7 @@ def update():
                 # Took bisection logic from cannon
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -812,7 +812,7 @@ def update():
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -820,7 +820,7 @@ def update():
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -828,19 +828,19 @@ def update():
 
                 # Check if Pirate Won
                 if abs(pirate_r_guess - player_current_r) < 0.01:
-                    shot_message = (f"The Pirate Hit You! You Lost!\nPirate guessed r = {pirate_r_guess}")
+                    shot_message = (f"The Pirate Hit You! You Lost!\nPirate guessed r = {pirate_r_guess:.2f}")
                     game_over = True
                     current_screen = 'Lose'
                 else:
                     rounds_left -= 1
                     if rounds_left <= 0:
-                        shot_message = (f"Pirate guessed r = {pirate_r_guess}\nOut of Plunders! Draw!")
+                        shot_message = (f"Pirate guessed r = {pirate_r_guess:.2f}\nOut of Plunders! Draw!")
                         game_over = True
 
                     else:
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
                             f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}" # The :.2f rounds the value to 2 decimal places
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
@@ -933,7 +933,7 @@ def update():
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -941,7 +941,7 @@ def update():
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -949,7 +949,7 @@ def update():
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -958,7 +958,7 @@ def update():
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
                         "The Pirate Hit You! You Lost!"
-                        f"\nPirate guessed r = {pirate_r_guess}"
+                        f"\nPirate guessed r = {pirate_r_guess:.2f}"
                     )
                     game_over = True
                     current_screen = "Lose"
@@ -967,14 +967,14 @@ def update():
 
                     if rounds_left <= 0:
                         shot_message = (
-                            f"Pirate guessed r = {pirate_r_guess}"
+                            f"Pirate guessed r = {pirate_r_guess:.2f}"
                             "\nOut of Plunders! Draw / You Survived!"
                         )
                         game_over = True
                     else:
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
                             f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
@@ -1091,7 +1091,7 @@ def update():
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -1099,7 +1099,7 @@ def update():
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -1107,7 +1107,7 @@ def update():
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = round((midpoint[0] + midpoint[1]) / 2, 2)
+                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
                     if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
                         midpoint[0] = pirate_r_guess
                     else:
@@ -1116,7 +1116,7 @@ def update():
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
                         "The Pirate Hit You! You Lost!"
-                        f"\nPirate guessed r = {pirate_r_guess}"
+                        f"\nPirate guessed r = {pirate_r_guess:.2f}"
                     )
                     game_over = True
                     current_screen = 'Lose'
@@ -1125,14 +1125,14 @@ def update():
 
                     if rounds_left <= 0:
                         shot_message = (
-                            f"Pirate guessed r = {pirate_r_guess}"
+                            f"Pirate guessed r = {pirate_r_guess:.2f}"
                             "\nOut of Plunders! Draw / You Survived!"
                         )
                         game_over = True
                     else:
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess}"
+                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
                             f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
