@@ -84,7 +84,7 @@ player_r_list = []
 landing_x = 0
 player_r_guess = 0 # The player's IRR guess
 shot_message = ""
-booty = random.randint(1, 100) # The CFs for the NPV
+booty = random.randint(1, 10) # The CFs for the NPV
 blood = 0 # This is the initial cost for a project, for example
 
 plunder_text = ""
@@ -127,7 +127,7 @@ def npv_zero(my_r, opponent_r, time_to_maturity):
     if my_r == 0:
         npv = booty * time_to_maturity # When the discount rate is 0, money in the future is the same as money today
     else:
-        blood = int(booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv)
+        blood = int(booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv) # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
 
         npv = booty / my_r * (1 - (1 + my_r)**(-time_to_maturity)) - blood # Since it's an annuity
         npv = round(npv, 2)
@@ -142,14 +142,12 @@ def blunderbuss_barrel_tip(angle_deg = None):
     
     rad = math.radians(angle_deg)
 
-    lx = blunderbuss_offset_x
-    ly = blunderbuss_offset_y
+    # Adjusting the axes to their rotating by taking the derivative of x' and y' to adjust.
+    rotated_x = blunderbuss_offset_x * math.cos(rad) - blunderbuss_offset_y * math.sin(rad)
+    rotated_y = blunderbuss_offset_x * math.sin(rad) + blunderbuss_offset_y * math.cos(rad)
 
-    rx = lx * math.cos(rad) - ly * math.sin(rad)
-    ry = lx * math.sin(rad) + ly * math.cos(rad)
-
-    start_x = weapon_blunderbuss.x + rx
-    start_y = weapon_blunderbuss.y + ry
+    start_x = weapon_blunderbuss.x + rotated_x
+    start_y = weapon_blunderbuss.y + rotated_y
 
     return start_x, start_y
 
@@ -160,7 +158,7 @@ def draw_cannon_arc():
     v = power # Velocity
     deg_to_show_rad = math.radians(deg_to_show)
 
-    start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad)
+    start_x = weapon_cannon.x - line_length / 2.2 * math.cos(deg_to_show_rad) # Since the cannon image is symmetrical we can do it this way
     start_y = weapon_cannon.y - line_length / 2.2 * math.sin(deg_to_show_rad)
 
     positions = []
@@ -276,8 +274,8 @@ def blunderbuss_game():
     # Rotate the bluderbuss with the shaken angle
     weapon_blunderbuss.angle = -blunderbuss_aim_angle_deg
 
-
-    weapon_blunderbuss.angle = -blunderbuss_angle_deg
+    # Or we can avoid having the Blunderbuss itself being shakne  and just have the aim shaken by:
+    #weapon_blunderbuss.angle = -blunderbuss_angle_deg
 
     weapon_blunderbuss.draw()
 
