@@ -52,8 +52,13 @@ weapon_blunderbuss = Actor("weapon_blunderbuss")
 cannon_bullet = Actor("weapon_cannon_bullet")
 parrot_bullet = Actor("weapon_parrot_bullet")
 blunderbuss_bullet = Actor("weapon_blunderbuss_bullet")
+pirate_bullet_actor = Actor("weapon_cannon_bullet")
 
-
+#pirate shots settings
+pirate_cannon_bullets = []
+pirate_arc_points = []
+pirate_cannon_x = 50
+pirate_cannon_y = HEIGHT // 2
 #Settings for the Parrot Game
 parrot_bullets = [] #Active shots for parrot
 parrot_shoot = True # This tracks the state of the Spacebar when shooting
@@ -342,6 +347,9 @@ def reset_game():
     parrot_bullets.clear()
     cannon_bullets.clear()
     blunderbuss_bullets.clear()
+    pirate_cannon_bullets.clear()
+    pirate_arc_points.clear()
+
 
     # Here we reset our opposing pirate logic
     pirate_has_acted = False
@@ -508,6 +516,11 @@ def draw_game():
     game_menu()
     player_ship.draw()
     btn_back.draw()
+    # --- DRAW PIRATE CANNON SHOTS ---
+    for bullet in pirate_cannon_bullets:
+        if bullet["index"] < len(bullet["points"]):
+            bullet["actor"].draw()
+    # --- END DRAW PIRATE CANNON SHOTS ---
 
     if selected_weapon == "parrot":
         weapon_parrot.draw()
@@ -690,7 +703,52 @@ def on_mouse_down(pos):
     if current_screen == "Lose" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
-            
+
+    #pirate shots arc
+def generate_fake_arc(start, end, height_boost=220, steps=50):
+    x0, y0 = start
+    x1, y1 = end
+
+    points = []
+    for i in range(steps + 1):
+        t = i / steps  # goes from 0 to 1
+
+        # interpolate x and y
+        x = x0 + (x1 - x0) * t
+        y = y0 + (y1 - y0) * t
+
+        # parabola lift for arc shape
+        arc = height_boost * (1 - (2 * t - 1) ** 2)
+        y -= arc
+
+        points.append((x, y))
+
+    return points
+
+def fire_pirate_shot():
+        global selected_weapon
+
+        # choose pirate bullet image based on player weapon
+        if selected_weapon == "parrot":
+            bullet_image = "weapon_parrot_bullet"
+        elif selected_weapon == "cannon":
+            bullet_image = "weapon_cannon_bullet"
+        elif selected_weapon == "blunderbuss":
+            bullet_image = "weapon_blunderbuss_bullet"
+        else:
+            bullet_image = "weapon_cannon_bullet"  # fallback
+
+        landing_x = pirate_r_guess * WIDTH
+        start = (pirate_cannon_x, pirate_cannon_y)
+        end = (landing_x, HEIGHT - 10)
+
+        points = generate_fake_arc(start, end)
+
+        pirate_cannon_bullets.append({
+            "points": points,
+            "index": 0,
+            "actor": Actor(bullet_image)
+        })
 # Game Loop
 
 # Parrot Movement
@@ -703,6 +761,16 @@ def update():
 
     g = 9.81
     t = 0.17 # Time per frames in seconds
+
+    # --- UPDATE PIRATE CANNON ANIMATION ---
+    for bullet in pirate_cannon_bullets:
+        bullet["index"] += 1
+        if bullet["index"] < len(bullet["points"]):
+            x, y = bullet["points"][bullet["index"]]
+            bullet["actor"].pos = (x, y)
+        else:
+            pirate_cannon_bullets.remove(bullet)
+    # --- END PIRATE CANNON ANIMATION ---
 
     if pending_pirate_turn and not game_over:
         player_message_timer -= t
@@ -728,6 +796,10 @@ def update():
             # If the Pirate did not play yet
             if not pirate_has_acted:
                 pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
+                # --- PIRATE CANNON ANIMATION ---
+                # Convert pirate r-guess to a landing X coordinate
+                fire_pirate_shot()
+                # --- END PIRATE CANNON ANIMATION ---
 
                 # Took bisection logic from cannon
                 if selected_level == "Easy":
@@ -857,7 +929,7 @@ def update():
 
             # If the Pirate did not play yet    
             if not pirate_has_acted:
-
+                fire_pirate_shot()
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
@@ -1015,7 +1087,7 @@ def update():
 
             # If the Pirate did not play yet    
             if not pirate_has_acted:
-
+                fire_pirate_shot()
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
