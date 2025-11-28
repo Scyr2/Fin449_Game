@@ -114,29 +114,62 @@ player_turn_message_timer = 0.0
 last_player_message = ""
 
 
-for i in range(5):
+for i in range(100):
     pirate_r_list.append(round(random.uniform(0.2, 0.8), 2)) # Drawing 5 random locations (r values) for the pirate
 
 pirate_current_r = round(random.choice(pirate_r_list), 2) # Selecting a location for the pirate at random
 
-for i in range(5):
+for i in range(100):
     player_r_list.append(round(random.uniform(0.2, 0.8), 2)) # Drawing 5 random locations (r values) for the pirate
 
 player_current_r = random.choice(player_r_list) # Selecting a location for the pirate at random
 
+# Central difference derivative approximation of f at r
+def numerical_derivative(f, r, h = 1e-5):
+    r_forward = min(1.0, r + h)
+    r_backward = max(1e-8, r - h)
+    derivative = (f(r_forward) - f(r_backward)) / (r_forward - r_backward)
 
-def npv_zero(my_r, opponent_r, time_to_maturity):
+    return derivative
+
+def npv_fn(r, booty, t, blood):
+    npv = booty / r * (1 - (1 + r)**(-t)) - blood # Since it's an annuity
+    return npv
+
+def npv_zero(my_r, opponent_r, t, booty):
     global blood
-    npv = 0 
+    npv = 0
+    npv_derivative = 0
+    x = 0 # This is the x value for the Linear Approximation equation, which will correspond to the Pirate's r guess
+    h = 1e-5
+    alpha = 0.3 # Damping factor. The learning rate
+    """
+    Alpha helps us regulate the machine learning curve because sometimes the slope can be 
+    too steep and then it will overshoot the answer by a significant number.
+    """
 
     if my_r == 0:
-        npv = booty * time_to_maturity # When the discount rate is 0, money in the future is the same as money today
-    else:
-        blood = booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
+        my_r = 1e-6 # Avoids division by 0
+    
+    blood = booty / opponent_r * (1 - (1 + opponent_r)**(-t)) - npv # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
 
-        npv = booty / my_r * (1 - (1 + my_r)**(-time_to_maturity)) - blood # Since it's an annuity
+    f = lambda r: npv_fn(r, booty, t, blood) # When we call f the input will be r and the output will be the NPV
 
-    return npv
+    npv = f(my_r)
+
+    try: # Trying to compute the numerical derivative
+        npv_derivative = numerical_derivative(f, my_r) # If it works we do this
+    except ZeroDivisionError: # If we're dividing by 0, we do this:
+        npv_derivative = 0.0
+
+    if abs(npv_derivative) > 1e-6:
+        x = my_r - alpha * npv / npv_derivative
+    else: # In case that npv_derivative = 0, or technically, < 1e-6, we fall back to the bisection method
+        x = (my_r + opponent_r) / 2
+
+    x = max(0.0, min(1.0, x))
+
+    return npv, x
 
 # Using angle_deg input but we need to reset is to None
 def blunderbuss_barrel_tip(angle_deg = None):
@@ -365,6 +398,8 @@ def reset_game():
 
     pirate_current_r = round(random.choice(pirate_r_list), 2)
     player_current_r = random.choice(pirate_r_list)
+
+    pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
 # Layout buttons
 def layout_menu():
@@ -795,36 +830,33 @@ def update():
         if not game_over and current_turn == "Pirate":
             # If the Pirate did not play yet
             if not pirate_has_acted:
-                pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
-                # --- PIRATE CANNON ANIMATION ---
-                # Convert pirate r-guess to a landing X coordinate
-                fire_pirate_shot()
-                # --- END PIRATE CANNON ANIMATION ---
+
+                if pirate_r_guess is None:
+                    pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
+
 
                 # Took bisection logic from cannon
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
                     pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                    if npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0] > 0:
                         midpoint[0] = pirate_r_guess
                     else:
                         midpoint[1] = pirate_r_guess
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
+
+                # PIRATE CANNON ANIMATION
+                # Convert pirate r-guess to a landing X coordinate
+                fire_pirate_shot()
 
                 # Check if Pirate Won
                 if abs(pirate_r_guess - player_current_r) < 0.01:
@@ -836,12 +868,11 @@ def update():
                     if rounds_left <= 0:
                         shot_message = (f"Pirate guessed r = {pirate_r_guess:.2f}\nOut of Plunders! Draw!")
                         game_over = True
-
                     else:
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}" # The :.2f rounds the value to 2 decimal places
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}" # The :.2f rounds the value to 2 decimal places
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -910,7 +941,7 @@ def update():
                 last_player_message = (
                     "You Missed Him, Captain!"
                     f"\nPirate's Current r value: {pirate_current_r}"
-                    f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
+                    f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
                     f"\nPlayer's r guess: {player_r_guess}"
                     f"\nPlunders: {plunders}"
                 )
@@ -925,35 +956,34 @@ def update():
     # The Cannon Game
     if current_screen == "Game" and selected_weapon == "cannon":
         if not game_over and current_turn == "Pirate":
-            pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
             # If the Pirate did not play yet    
             if not pirate_has_acted:
-                fire_pirate_shot()
+
+                if pirate_r_guess is None:
+                    pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
+                
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
                     pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                    if npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0] > 0:
                         midpoint[0] = pirate_r_guess
                     else:
                         midpoint[1] = pirate_r_guess
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
+
+                fire_pirate_shot()
+
 
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
@@ -975,7 +1005,7 @@ def update():
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -1067,7 +1097,7 @@ def update():
                         last_player_message = (
                             "You Missed Him, Captain!"
                             f"\nPirate's Current r value: {pirate_current_r}"
-                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nPlayer's r guess: {player_r_guess}"
@@ -1083,35 +1113,34 @@ def update():
     # The Blunderbuss Game
     if current_screen == "Game" and selected_weapon == "blunderbuss":
         if not game_over and current_turn == "Pirate":
-            pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
             # If the Pirate did not play yet    
             if not pirate_has_acted:
-                fire_pirate_shot()
+
+                if pirate_r_guess is None:
+                    pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
+
                 # Setting the Easy Level Game with the Bisection Method
                 if selected_level == "Easy":
                     difficulty_sd = 0.05
                     pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
+                    if npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0] > 0:
                         midpoint[0] = pirate_r_guess
                     else:
                         midpoint[1] = pirate_r_guess
 
                 elif selected_level == "Medium":
                     difficulty_sd = 0.03
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
 
                 elif selected_level == "Hard":
                     difficulty_sd = 0.01
-                    pirate_r_guess = (midpoint[0] + midpoint[1]) / 2
-                    if npv_zero(pirate_r_guess, player_current_r, plunders) > 0:
-                        midpoint[0] = pirate_r_guess
-                    else:
-                        midpoint[1] = pirate_r_guess
+                    x = npv_zero(pirate_r_guess, player_current_r, plunders, booty)[1]
+                    pirate_r_guess = max(0.01, min(0.99, x)) # We're doing this to make sure that Newton–Raphson Method doesn't produce value outside of our range
+
+                fire_pirate_shot()
+
 
                 if abs(pirate_r_guess - player_current_r) < 0.01:
                     shot_message = (
@@ -1133,7 +1162,7 @@ def update():
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -1223,7 +1252,7 @@ def update():
                         last_player_message = (
                             "You Missed Him, Captain!"
                             f"\nPirate's Current r value: {pirate_current_r}"
-                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nPlayer's r guess: {player_r_guess}"
@@ -1237,7 +1266,7 @@ def update():
                     blunderbuss_bullets.remove(i)  
 
 
-# This function is for handling the PLunders text box
+# This function is for handling the Plunders text box
 def on_key_down(key):
     global plunder_text, plunder_box_active, plunders
     global rounds_left, current_turn, game_over, pirate_r_guess, pirate_current_r, player_current_r
