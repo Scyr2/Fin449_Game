@@ -67,7 +67,6 @@ parrot_shoot = True # This tracks the state of the Spacebar when shooting
 # Settings for the Cannon Game
 angle_deg = 0 # Cannon actual angle (degrees)
 deg_to_show = 25 # Cannon base angle (degrees)
-line_length = 150 # Length of the aiming line
 power = 0
 cannon_bullets = [] # We need a list to track the active shots
 cannon_shoot = True # This tracks the state of the Spacebar when shooting
