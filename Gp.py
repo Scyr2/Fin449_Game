@@ -117,7 +117,7 @@ pirate_current_r = round(random.choice(pirate_r_list), 2) # Selecting a location
 for i in range(5):
     player_r_list.append(round(random.uniform(0.2, 0.8), 2)) # Drawing 5 random locations (r values) for the pirate
 
-player_current_r = random.choice(pirate_r_list) # Selecting a location for the pirate at random
+player_current_r = random.choice(player_r_list) # Selecting a location for the pirate at random
 
 
 def npv_zero(my_r, opponent_r, time_to_maturity):
@@ -130,7 +130,6 @@ def npv_zero(my_r, opponent_r, time_to_maturity):
         blood = int(booty / opponent_r * (1 - (1 + opponent_r)**(-time_to_maturity)) - npv) # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
 
         npv = booty / my_r * (1 - (1 + my_r)**(-time_to_maturity)) - blood # Since it's an annuity
-        npv = round(npv, 2)
 
     return npv
 
@@ -328,12 +327,16 @@ def reset_game():
     global parrot_shoot, cannon_shoot, blunderbuss_shoot
     global pirate_has_acted, pending_pirate_turn, pending_player_turn, midpoint
     global pirate_r_guess, player_turn_message_timer, pirate_message_timer
+    global pirate_current_r, player_current_r
 
     # Resesting the game state
     game_over = False
     current_turn = "Player"
     rounds_left = plunders
     shot_message = ""
+    parrot_shoot = True
+    cannon_shoot = True
+    blunderbuss_shoot = True
 
     # Clearing active bullets
     parrot_bullets.clear()
@@ -351,6 +354,9 @@ def reset_game():
     # Reseting timers
     pirate_turn_message_timer = 0.0
     pirate_message_timer = 0.0
+
+    pirate_current_r = round(random.choice(pirate_r_list), 2)
+    player_current_r = random.choice(pirate_r_list)
 
 # Layout buttons
 def layout_menu():
@@ -515,6 +521,14 @@ def draw_game():
             color = "white"
         )
 
+        screen.draw.text(
+            f"Parrot's Coordinates: {weapon_parrot.x}",
+            (WIDTH - 225, HEIGHT - 35),
+            fontname = "pixel_reg",
+            fontsize = 18,
+            color = "white"
+            )
+
     # New code start for parrot - Myles
         # Game info to display
         screen.draw.text(
@@ -549,12 +563,14 @@ def draw_win():
     win_menu()
     reset_game()
     btn_back.draw()
+
 # Win screen
 def draw_lose():
     draw_background_cover(images.loss_background)
     loss_menu()
     reset_game()
     btn_back.draw()
+
 # Main draw
 def draw():
     if current_screen == "Menu":
@@ -753,7 +769,7 @@ def update():
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}" # The :.2f rounds the value to 2 decimal places
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -822,7 +838,7 @@ def update():
                 last_player_message = (
                     "You Missed Him, Captain!"
                     f"\nPirate's Current r value: {pirate_current_r}"
-                    f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                    f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
                     f"\nPlayer's r guess: {player_r_guess}"
                     f"\nPlunders: {plunders}"
                 )
@@ -887,7 +903,7 @@ def update():
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -979,7 +995,7 @@ def update():
                         last_player_message = (
                             "You Missed Him, Captain!"
                             f"\nPirate's Current r value: {pirate_current_r}"
-                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nPlayer's r guess: {player_r_guess}"
@@ -1045,7 +1061,7 @@ def update():
                         shot_message = (
                             "Phew... The Pirate Missed Us, Captain!"
                             f"\nPirate's r guess: {pirate_r_guess}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders)}"
+                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nYour Current r value: {player_current_r}"
@@ -1135,7 +1151,7 @@ def update():
                         last_player_message = (
                             "You Missed Him, Captain!"
                             f"\nPirate's Current r value: {pirate_current_r}"
-                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders)}"
+                            f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders):.2f}"
                             f"\nBlood (Cost): {blood}"
                             f"\nBooty (Return): {booty}"
                             f"\nPlayer's r guess: {player_r_guess}"
@@ -1202,10 +1218,6 @@ def on_key_down(key):
         if len(plunder_text) > 3:
             plunder_text = plunder_text[:3]
 
-
-
-
-#Parrot ends above here.
 
 
 #Music start on title screen
