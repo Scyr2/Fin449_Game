@@ -37,10 +37,10 @@ btn_easy = Actor("btn_easy")
 btn_medium = Actor("btn_medium")
 btn_hard = Actor("btn_hard")
 plunders_box_img = Actor("plunders_box")
-plunders_box = Rect(200, 310, 150, 40)
-easy_box = Rect(425, 132, 150, 86)
-medium_box = Rect(425, 282, 150, 86)
-hard_box = Rect(425, 432, 150, 86)
+plunders_box = Rect(200, 275, 100, 40)
+easy_box = Rect(375, 132, 150, 86)
+medium_box = Rect(375, 282, 150, 86)
+hard_box = Rect(375, 432, 150, 86)
 
 #Need to add some sort of plunder system for turns here too later.
 
@@ -374,12 +374,12 @@ def selections_menu():
     btn_parrot.pos = (700, 175)
     btn_cannon.pos = (700, 325)
     btn_blunderbuss.pos = (700, 475)
-    btn_easy.pos = (500, 175)
-    btn_medium.pos = (500, 325)
-    btn_hard.pos = (500, 475)
+    btn_easy.pos = (450, 175)
+    btn_medium.pos = (450, 325)
+    btn_hard.pos = (450, 475)
     btn_back.pos = (20, 20)
     plunders_box_img.pos = (200, 300)
-    btn_start.pos = (300, 475) # selections screen
+    btn_start.pos = (150, 520) # selections screen
 
 # In Game Buttons and Actors
 def game_menu():
