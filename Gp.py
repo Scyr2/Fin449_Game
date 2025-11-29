@@ -408,9 +408,9 @@ def layout_menu():
     btn_instructions.pos = (500, 500)
     btn_settings.pos = (win_w - 50, win_h - 50)
 
-    btn_vol_up.pos = (int(win_w * 0.75), int(win_h * 0.45))
-    btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 70)
-    btn_vol_mute.pos = (btn_vol_up.x, btn_vol_up.y + 140)
+    btn_vol_up.pos = (win_w - 145, win_h - 215)
+    btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 55)
+    btn_vol_mute.pos = (btn_vol_up.x, btn_vol_down.y + 55)
 
 # Selection Screen buttons
 def selections_menu():
@@ -469,10 +469,10 @@ def draw_menu():
 # Settings panel
 def draw_settings_panel(win_w, win_h):
     panel_rect = pygame.Rect(
-        int(win_w * 0.65),
-        int(win_h * 0.30),
-        int(win_w * 0.28),
-        int(win_h * 0.50),
+        int(win_w - 220), # x location
+        int(win_h - 290), # y location
+        int(150), # Width
+        int(220), # Height
     )
 
     screen.draw.filled_rect(panel_rect, (255, 255, 255))
@@ -542,7 +542,7 @@ def draw_selections():
         fontname = "pixel_reg",
     )
 
-    if selected_weapon != None: # Button pops up when weapon is picked
+    if selected_weapon != None and selected_level != None: # Button pops up when weapon is picked
         btn_start.draw()
 
 # Game screen
@@ -551,11 +551,11 @@ def draw_game():
     game_menu()
     player_ship.draw()
     btn_back.draw()
-    # --- DRAW PIRATE CANNON SHOTS ---
+
+    # DRAW PIRATE CANNON SHOTS
     for bullet in pirate_cannon_bullets:
         if bullet["index"] < len(bullet["points"]):
             bullet["actor"].draw()
-    # --- END DRAW PIRATE CANNON SHOTS ---
 
     if selected_weapon == "parrot":
         weapon_parrot.draw()
@@ -577,7 +577,6 @@ def draw_game():
             color = "white"
             )
 
-    # New code start for parrot - Myles
         # Game info to display
         screen.draw.text(
             f"Turn:{current_turn.upper()} | Rounds left: {rounds_left}",
@@ -605,7 +604,7 @@ def draw_game():
     if selected_weapon == "blunderbuss":
         blunderbuss_game()
 
-#Win screen
+# Win screen
 def draw_win():
     draw_background_cover(images.win_background)
     win_menu()
@@ -717,7 +716,7 @@ def on_mouse_down(pos):
             weapon_blunderbuss.pos = (650, 520)
 
         if btn_start.collidepoint(pos):
-            if selected_weapon != None:
+            if selected_weapon != None and selected_level != None:
                 current_screen = "Game"
 
         if btn_easy.collidepoint(pos):
@@ -1208,7 +1207,7 @@ def update():
 
             if keyboard.space and blunderbuss_shoot and len(blunderbuss_bullets) == 0 and not game_over and current_turn == "Player":
 
-                start_x, start_y = blunderbuss_barrel_tip(blunderbuss_aim_angle_deg)
+                start_x, start_y = barrel_tip(blunderbuss_offset_x, blunderbuss_offset_y, weapon_blunderbuss, blunderbuss_angle_deg, angle_deg)
 
                 end_x = -v * math.cos(angle_rad)
                 end_y = -v * math.sin(angle_rad)
