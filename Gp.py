@@ -451,6 +451,8 @@ def win_menu():
 
 def loss_menu():
     btn_back.pos = (20, 20)
+def tie_menu():
+    btn_back.pos = (20, 20)
 def instructions_menu():
     btn_back.pos = (20, 20)
 
@@ -640,6 +642,13 @@ def draw_lose():
     reset_game()
     btn_back.draw()
 
+#draw screen (as in tie)
+def draw_tie():
+    draw_background_cover(images.draw_background)
+    tie_menu()
+    reset_game()
+    btn_back.draw()
+
 #Instructions screen
 def draw_instructions():
     draw_background_cover(images.instructions_screen)
@@ -660,6 +669,8 @@ def draw():
         draw_game()
     if current_screen == "Instructions":
         draw_instructions()
+    if current_screen == "Draw":
+        draw_tie()
 
 # Click handling
 def on_mouse_down(pos):
@@ -770,6 +781,10 @@ def on_mouse_down(pos):
     if current_screen == "Instructions" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Menu"
+
+    if current_screen == "Draw" and btn_back.collidepoint(pos):
+        reset_game() # calls upon function and resets variables
+        current_screen = "Selections"
     #pirate shots arc
 def generate_fake_arc(start, end, height_boost=220, steps=50):
     x0, y0 = start
@@ -899,6 +914,7 @@ def update():
                     if rounds_left <= 0:
                         shot_message = (f"Pirate guessed r = {pirate_r_guess:.2f}\nOut of Plunders! It's a Draw! You Survived!!")
                         game_over = True
+                        current_screen = 'Draw'
                     else:
                         shot_message = (
                             f"Phew... The Pirate Missed Us, Captain!"
@@ -1025,6 +1041,7 @@ def update():
                             "\nOut of Plunders! It's a Draw! You Survived!!"
                         )
                         game_over = True
+                        current_screen = "Draw"
                     else:
                         shot_message = (
                             f"Phew... The Pirate Missed Us, Captain!"
@@ -1171,6 +1188,7 @@ def update():
                             "\nOut of Plunders! It's a Draw! You Survived!!"
                         )
                         game_over = True
+                        current_screen = 'Draw'
                     else:
                         shot_message = (
                             f"Phew... The Pirate Missed Us, Captain!"
