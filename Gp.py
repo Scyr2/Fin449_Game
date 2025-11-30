@@ -514,12 +514,15 @@ def draw_selections():
     screen.draw.filled_rect(pirate_rect, "white")
 
     # Circle draws behind weapon under here
+    screen.draw.filled_circle(btn_parrot.pos, 60, "white")
+    screen.draw.filled_circle(btn_cannon.pos, 60, "white")
+    screen.draw.filled_circle(btn_blunderbuss.pos, 60, "white")
     if selected_weapon == "parrot":
-        screen.draw.filled_circle(btn_parrot.pos, 60, "white")
+        screen.draw.filled_circle(btn_parrot.pos, 60, "orange")
     elif selected_weapon == "cannon":
-        screen.draw.filled_circle(btn_cannon.pos, 60, "white")
+        screen.draw.filled_circle(btn_cannon.pos, 60, "orange")
     elif selected_weapon == "blunderbuss":
-        screen.draw.filled_circle(btn_blunderbuss.pos, 60, "white")
+        screen.draw.filled_circle(btn_blunderbuss.pos, 60, "orange")
     # Ends here NOTE actual buttons must come after
 
     btn_parrot.draw()
