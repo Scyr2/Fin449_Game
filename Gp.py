@@ -142,7 +142,6 @@ def npv_zero(my_r, opponent_r, t, booty):
     npv = 0
     npv_derivative = 0
     x = 0 # This is the x value for the Linear Approximation equation, which will correspond to the Pirate's r guess
-    h = 1e-5
     alpha = 0.3 # Damping factor. The learning rate
     """
     Alpha helps us regulate the machine learning curve because sometimes the slope can be 
@@ -151,10 +150,13 @@ def npv_zero(my_r, opponent_r, t, booty):
 
     if my_r == 0:
         my_r = 1e-6 # Avoids division by 0
-    
-    blood = booty / opponent_r * (1 - (1 + opponent_r)**(-t)) - npv # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
+    if opponent_r == 0:
+        opponent_r = 1e-6
 
-    f = lambda r: npv_fn(r, booty, t, blood) # When we call f the input will be r and the output will be the NPV
+    blood_local = booty / opponent_r * (1 - (1 + opponent_r)**(-t)) - npv # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
+    
+
+    f = lambda r: npv_fn(r, booty, t, blood_local) # When we call f the input will be r and the output will be the NPV
 
     npv = f(my_r)
 
@@ -282,14 +284,14 @@ def cannon_game():
     if shot_message:
         screen.draw.text(
             shot_message,
-            (60, 60),
+            (30, 450),
             fontname = "pixel_reg",
             fontsize = 22,
             color = "white"
         )
 
     screen.draw.text(
-        f"Turn: {current_turn.upper()} | Rounds left: {rounds_left}",
+        f"Rounds left: {rounds_left}",
         (60, 20),
         fontname = "pixel_reg",
         fontsize = 26,
@@ -344,19 +346,26 @@ def blunderbuss_game():
     if shot_message:
         screen.draw.text(
             shot_message,
-            (60, 60),
+            (30, 450),
             fontname = "pixel_reg",
             fontsize = 22,
             color = "white"
         )
 
     screen.draw.text(
-        f"Turn: {current_turn.upper()} | Rounds left: {rounds_left}",
+        f"Rounds left: {rounds_left}",
         (60, 20),
         fontname = "pixel_reg",
         fontsize = 26,
         color = "white"
     )
+
+def calibrate_blood():
+    global blood
+    
+    blood = booty / pirate_current_r * (1 - (1 + pirate_current_r)**(-plunders)) # Here we're making sure that the Pirate's r location will make the NPV = 0 by fitting the blood to the right value
+
+    return blood
 
 #Reset game function
 def reset_game():
@@ -398,6 +407,8 @@ def reset_game():
 
     pirate_current_r = round(random.choice(pirate_r_list), 2)
     player_current_r = random.choice(pirate_r_list)
+
+    calibrate_blood()
 
     pirate_r_guess = round(random.uniform(0.2, 0.8), 2)
 
@@ -503,15 +514,12 @@ def draw_selections():
     screen.draw.filled_rect(pirate_rect, "white")
 
     # Circle draws behind weapon under here
-    screen.draw.filled_circle(btn_parrot.pos, 60, "white")
-    screen.draw.filled_circle(btn_cannon.pos, 60, "white")
-    screen.draw.filled_circle(btn_blunderbuss.pos, 60, "white")
     if selected_weapon == "parrot":
-        screen.draw.filled_circle(btn_parrot.pos, 60, "orange")
+        screen.draw.filled_circle(btn_parrot.pos, 60, "white")
     elif selected_weapon == "cannon":
-        screen.draw.filled_circle(btn_cannon.pos, 60, "orange")
+        screen.draw.filled_circle(btn_cannon.pos, 60, "white")
     elif selected_weapon == "blunderbuss":
-        screen.draw.filled_circle(btn_blunderbuss.pos, 60, "orange")
+        screen.draw.filled_circle(btn_blunderbuss.pos, 60, "white")
     # Ends here NOTE actual buttons must come after
 
     btn_parrot.draw()
@@ -582,7 +590,7 @@ def draw_game():
 
         # Game info to display
         screen.draw.text(
-            f"Turn:{current_turn.upper()} | Rounds left: {rounds_left}",
+            f"Rounds left: {rounds_left}",
             (60,20),
             fontname = "pixel_reg",
             fontsize = 26,
@@ -593,7 +601,7 @@ def draw_game():
         if shot_message:
             screen.draw.text(
             shot_message,
-            (60,60),
+            (30, 450),
             fontname = "pixel_reg",
             fontsize = 22,
             color = "white"
@@ -824,7 +832,7 @@ def update():
         if player_turn_message_timer <= 0:
             pending_player_turn = False
             current_turn = "Player"
-            shot_message = "ARR, It's Your Turn Captain!\n" + last_player_message[24:]
+            shot_message = "ARR, It's Your Turn Captain!" + last_player_message[24:]
 
     # Pirate game loop using logic from cannon
     if current_screen == 'Game' and selected_weapon == 'parrot':
@@ -861,25 +869,18 @@ def update():
                 fire_pirate_shot()
 
                 # Check if Pirate Won
-                if abs(pirate_r_guess - player_current_r) < 0.01:
+                if abs(round(pirate_r_guess, 2) - player_current_r) < 0.01:
                     shot_message = (f"The Pirate Hit You! You Lost!\nPirate guessed r = {pirate_r_guess:.2f}")
                     game_over = True
                     current_screen = 'Lose'
                 else:
                     rounds_left -= 1
                     if rounds_left <= 0:
-                        shot_message = (f"Pirate guessed r = {pirate_r_guess:.2f}\nOut of Plunders! Draw!")
+                        shot_message = (f"Pirate guessed r = {pirate_r_guess:.2f}\nOut of Plunders! It's a Draw! You Survived!!")
                         game_over = True
                     else:
                         shot_message = (
-                            "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}" # The :.2f rounds the value to 2 decimal places
-                            f"\nBlood (Cost): {blood}"
-                            f"\nBooty (Return): {booty}"
-                            f"\nYour Current r value: {player_current_r}"
-                            f"\nPlunders: {plunders}"
-                            f"\nRounds left: {rounds_left}"
+                            f"Phew... The Pirate Missed Us, Captain!"
                         )
 
                 pirate_message_timer = 15.0
@@ -941,11 +942,11 @@ def update():
                 current_screen = 'Win'
             else:
                 last_player_message = (
-                    "You Missed Him, Captain!"
-                    f"\nPirate's Current r value: {pirate_current_r}"
+                    "You Missed Him, Captain!\n"
+                    f"\nBlood (Initial Cost): {blood:.2f}"
+                    f"\nBooty (CFs): {booty}"
+                    f"\nYour r value: {player_r_guess}"
                     f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
-                    f"\nPlayer's r guess: {player_r_guess}"
-                    f"\nPlunders: {plunders}"
                 )
                 shot_message = last_player_message
                 current_turn = "Resolving"
@@ -987,7 +988,7 @@ def update():
                 fire_pirate_shot()
 
 
-                if abs(pirate_r_guess - player_current_r) < 0.01:
+                if abs(round(pirate_r_guess, 2) - player_current_r) < 0.01:
                     shot_message = (
                         "The Pirate Hit You! You Lost!"
                         f"\nPirate guessed r = {pirate_r_guess:.2f}"
@@ -1000,19 +1001,12 @@ def update():
                     if rounds_left <= 0:
                         shot_message = (
                             f"Pirate guessed r = {pirate_r_guess:.2f}"
-                            "\nOut of Plunders! Draw / You Survived!"
+                            "\nOut of Plunders! It's a Draw! You Survived!!"
                         )
                         game_over = True
                     else:
                         shot_message = (
-                            "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}"
-                            f"\nBlood (Cost): {blood}"
-                            f"\nBooty (Return): {booty}"
-                            f"\nYour Current r value: {player_current_r}"
-                            f"\nPlunders: {plunders}"
-                            f"\nRounds left: {rounds_left}"
+                            f"Phew... The Pirate Missed Us, Captain!"
                         )
 
                 pirate_message_timer = 15.0
@@ -1096,14 +1090,12 @@ def update():
                         current_screen = 'Win'
                     else:
                         last_player_message = (
-                            "You Missed Him, Captain!"
-                            f"\nPirate's Current r value: {pirate_current_r}"
+                            "You Missed Him, Captain!\n"
+                            f"\nBlood (Initial Cost): {blood:.2f}"
+                            f"\nBooty (CFs): {booty}"
+                            f"\nYour r value: {player_r_guess}"
                             f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
-                            f"\nBlood (Cost): {blood}"
-                            f"\nBooty (Return): {booty}"
-                            f"\nPlayer's r guess: {player_r_guess}"
-                            f"\nPlunders: {plunders}"
-                            )
+                        )
                         shot_message = last_player_message
                         current_turn = "Resolving" # We're doing this so that the player wouldn't be able to shoot after he made a shot
                         player_message_timer = 30.0
@@ -1143,10 +1135,9 @@ def update():
                 fire_pirate_shot()
 
 
-                if abs(pirate_r_guess - player_current_r) < 0.01:
+                if abs(round(pirate_r_guess, 2) - player_current_r) < 0.01:
                     shot_message = (
                         "The Pirate Hit You! You Lost!"
-                        f"\nPirate guessed r = {pirate_r_guess:.2f}"
                     )
                     game_over = True
                     current_screen = 'Lose'
@@ -1156,19 +1147,12 @@ def update():
                     if rounds_left <= 0:
                         shot_message = (
                             f"Pirate guessed r = {pirate_r_guess:.2f}"
-                            "\nOut of Plunders! Draw / You Survived!"
+                            "\nOut of Plunders! It's a Draw! You Survived!!"
                         )
                         game_over = True
                     else:
                         shot_message = (
-                            "Phew... The Pirate Missed Us, Captain!"
-                            f"\nPirate's r guess: {pirate_r_guess:.2f}"
-                            f"\nPirate's NPV: {npv_zero(pirate_r_guess, player_current_r, plunders, booty)[0]:.2f}"
-                            f"\nBlood (Cost): {blood}"
-                            f"\nBooty (Return): {booty}"
-                            f"\nYour Current r value: {player_current_r}"
-                            f"\nPlunders: {plunders}"
-                            f"\nRounds left: {rounds_left}"
+                            f"Phew... The Pirate Missed Us, Captain!"
                         )
 
                 pirate_message_timer = 15.0
@@ -1210,7 +1194,7 @@ def update():
 
             if keyboard.space and blunderbuss_shoot and len(blunderbuss_bullets) == 0 and not game_over and current_turn == "Player":
 
-                start_x, start_y = barrel_tip(blunderbuss_offset_x, blunderbuss_offset_y, weapon_blunderbuss, blunderbuss_angle_deg, angle_deg)
+                start_x, start_y = barrel_tip(blunderbuss_offset_x, blunderbuss_offset_y, weapon_blunderbuss, blunderbuss_aim_angle_deg)
 
                 end_x = -v * math.cos(angle_rad)
                 end_y = -v * math.sin(angle_rad)
@@ -1251,14 +1235,12 @@ def update():
                         current_screen = 'Win'
                     else:
                         last_player_message = (
-                            "You Missed Him, Captain!"
-                            f"\nPirate's Current r value: {pirate_current_r}"
+                            "You Missed Him, Captain!\n"
+                            f"\nBlood (Initial Cost): {blood:.2f}"
+                            f"\nBooty (CFs): {booty}"
+                            f"\nYour r value: {player_r_guess}"
                             f"\nYour NPV: {npv_zero(player_r_guess, pirate_current_r, plunders, booty)[0]:.2f}"
-                            f"\nBlood (Cost): {blood}"
-                            f"\nBooty (Return): {booty}"
-                            f"\nPlayer's r guess: {player_r_guess}"
-                            f"\nPlunders: {plunders}"
-                            )
+                        )
                         shot_message = last_player_message
                         current_turn = "Resolving" # We're doing this so that the player wouldn't be able to shoot after he made a shot
                         player_message_timer = 30.0
@@ -1295,6 +1277,8 @@ def on_key_down(key):
         midpoint[0], midpoint[1] = 0, 1.0
         pirate_current_r = round(random.choice(pirate_r_list), 2)
         player_current_r = random.choice(pirate_r_list)
+
+        calibrate_blood()
 
         # Reset game state that depends on plunders
         current_turn = "Player"
