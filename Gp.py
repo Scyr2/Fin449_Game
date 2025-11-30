@@ -445,6 +445,8 @@ def win_menu():
 
 def loss_menu():
     btn_back.pos = (20, 20)
+def instructions_menu():
+    btn_back.pos = (20, 20)
 
 
 # Draw background image to cover screen
@@ -632,6 +634,12 @@ def draw_lose():
     reset_game()
     btn_back.draw()
 
+#Instructions screen
+def draw_instructions():
+    draw_background_cover(images.instructions_screen)
+    reset_game()
+    instructions_menu()
+
 # Main draw
 def draw():
     if current_screen == "Menu":
@@ -644,6 +652,8 @@ def draw():
         draw_lose()
     elif current_screen == "Game":
         draw_game()
+    if current_screen == "Instructions":
+        draw_instructions()
 
 # Click handling
 def on_mouse_down(pos):
@@ -658,7 +668,7 @@ def on_mouse_down(pos):
         # music.stop()
 
         elif btn_instructions.collidepoint(pos):
-            print("Instructions")
+            current_screen = 'Instructions'
 
         elif btn_settings.collidepoint(pos):
             settings_open = not settings_open
@@ -751,7 +761,9 @@ def on_mouse_down(pos):
     if current_screen == "Lose" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
-
+    if current_screen == "Instructions" and btn_back.collidepoint(pos):
+        reset_game() # calls upon function and resets variables
+        current_screen = "Menu"
     #pirate shots arc
 def generate_fake_arc(start, end, height_boost=220, steps=50):
     x0, y0 = start
