@@ -138,7 +138,7 @@ def npv_fn(r, booty, t, blood):
     return npv
 
 def npv_zero(my_r, opponent_r, t, booty):
-    global blood
+    global blood, selected_level
     npv = 0
     npv_derivative = 0
     x = 0 # This is the x value for the Linear Approximation equation, which will correspond to the Pirate's r guess
@@ -147,6 +147,12 @@ def npv_zero(my_r, opponent_r, t, booty):
     Alpha helps us regulate the machine learning curve because sometimes the slope can be 
     too steep and then it will overshoot the answer by a significant number.
     """
+
+    if selected_level == "Medium":
+        alpha = 0.4
+    elif selected_level == "Hard":
+        alpha = 0.5
+
 
     if my_r == 0:
         my_r = 1e-6 # Avoids division by 0
@@ -417,7 +423,7 @@ def layout_menu():
     win_w, win_h = screen.surface.get_size()
     btn_play.pos = (300, 500)
     btn_instructions.pos = (500, 500)
-    btn_settings.pos = (win_w - 50, win_h - 50)
+    btn_settings.pos = (win_w - 50, win_h - 55)
 
     btn_vol_up.pos = (win_w - 145, win_h - 215)
     btn_vol_down.pos = (btn_vol_up.x, btn_vol_up.y + 55)
