@@ -303,7 +303,27 @@ def cannon_game():
         fontsize = 26,
         color = "white"
     )
-
+    screen.draw.text(
+        "Use the arrow keys to adjust the angle",
+        (60, 40),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
+    screen.draw.text(
+        "Use the up and down keys to change power",
+        (60, 60),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
+    screen.draw.text(
+        "Use the spacebar to shoot the cannon",
+        (60, 80),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
 
 def blunderbuss_game():
     global blunderbuss_aim_angle_deg
@@ -365,7 +385,27 @@ def blunderbuss_game():
         fontsize = 26,
         color = "white"
     )
-
+    screen.draw.text(
+        "Use the arrow keys to adjust the angle",
+        (60, 40),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
+    screen.draw.text(
+        "Use the up and down keys to change power",
+        (60, 60),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
+    screen.draw.text(
+        "Use the spacebar to shoot the blunderbuss",
+        (60, 80),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
 def calibrate_blood():
     global blood
     
@@ -617,7 +657,21 @@ def draw_game():
             fontsize = 26,
             color = "white"
         )
+        screen.draw.text(
+            "Use the arrow keys to move left and right",
+            (60, 40),
+            fontname="pixel_reg",
+            fontsize=20,
+            color="white"
+        )
 
+        screen.draw.text(
+            "Use the spacebar to drop the bomb",
+            (60, 60),
+            fontname="pixel_reg",
+            fontsize=20,
+            color="white"
+        )
         # Display results of shot for parrot
         if shot_message:
             screen.draw.text(
