@@ -566,6 +566,14 @@ def draw_selections():
         fontname = "pixel_reg",
     )
 
+    screen.draw.text(
+        "Press ENTER",
+        (197, 320),
+        fontname = "pixel_reg",
+        fontsize = 25,
+        color = "black"
+    )
+
     if selected_weapon != None and selected_level != None: # Button pops up when weapon is picked
         btn_start.draw()
 
@@ -1311,7 +1319,7 @@ def on_key_down(key):
         else:
             plunders = 1 # Defaulting to pluders of 1 if an empty box was entered
         
-        plunder_text = "" # Clear box after enter
+        #plunder_text = "" # Clear box after enter
         plunder_box_active = False
         midpoint[0], midpoint[1] = 0, 1.0
         pirate_current_r = round(random.choice(pirate_r_list), 2)
