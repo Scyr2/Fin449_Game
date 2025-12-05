@@ -3,9 +3,6 @@ import pgzrun
 import math
 import random
 
-from pgzero.actor import Actor
-from pygame.gfxdraw import rectangle
-
 # Base sizes
 base_width = 800
 base_height = 600
