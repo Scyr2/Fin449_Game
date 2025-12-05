@@ -386,14 +386,26 @@ def blunderbuss_game():
         color = "white"
     )
     screen.draw.text(
-        "Use the arrow keys to adjust the angle\nUse the up and down keys to change power",
+        "Use the arrow keys to adjust the angle",
         (60, 40),
         fontname="pixel_reg",
         fontsize=20,
         color="white"
     )
-
-    
+    screen.draw.text(
+        "Use the up and down keys to change power",
+        (60, 60),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
+    screen.draw.text(
+        "Use the spacebar to shoot the blunderbuss",
+        (60, 80),
+        fontname="pixel_reg",
+        fontsize=20,
+        color="white"
+    )
 def calibrate_blood():
     global blood
     
@@ -401,7 +413,7 @@ def calibrate_blood():
 
     return blood
 
-# Reset game function
+#Reset game function
 def reset_game():
     global game_over, current_turn, rounds_left, shot_message
     global parrot_bullets, cannon_bullets, blunderbuss_bullets
@@ -577,14 +589,18 @@ def draw_selections():
     screen.draw.filled_rect(plunders_box, "white") # Drawing the Plunders text box
     screen.draw.rect(plunders_box, border_color) # Drawing the border of the Plunders text box
 
-    easy_level_color = "white" if easy_box_active else "black"
-    screen.draw.rect(easy_box, easy_level_color)
-
-    medium_level_color = "white" if medium_box_active else "black"
-    screen.draw.rect(medium_box, medium_level_color)
-
-    hard_level_color = "white" if hard_box_active else "black"
-    screen.draw.rect(hard_box, hard_level_color)
+    if easy_box_active:
+        border_width = 5  # thickness of the border
+        for i in range(border_width):
+            screen.draw.rect(easy_box.inflate(i * 2, i * 2), "black")
+    if medium_box_active:
+        border_width = 5  # thickness of the border
+        for i in range(border_width):
+            screen.draw.rect(medium_box.inflate(i * 2, i * 2), "black")
+    if hard_box_active:
+        border_width = 5  # thickness of the border
+        for i in range(border_width):
+            screen.draw.rect(hard_box.inflate(i * 2, i * 2), "black")
 
     screen.draw.text(
         plunder_text,
@@ -835,8 +851,7 @@ def on_mouse_down(pos):
     if current_screen == "Draw" and btn_back.collidepoint(pos):
         reset_game() # calls upon function and resets variables
         current_screen = "Selections"
-
-# Pirate shots arc
+    #pirate shots arc
 def generate_fake_arc(start, end, height_boost=220, steps=50):
     x0, y0 = start
     x1, y1 = end
